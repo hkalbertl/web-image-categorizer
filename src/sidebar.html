@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Web Image Categorizer</title>
+  <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="lib/fontawesome/css/all.min.css" />
+  <link rel="stylesheet" href="css/sidebar.css" />
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="container-fluid">
+      <div class="navbar-brand" title="Web Image Categorizer">
+        WIC
+        <span class="badge rounded-pill text-bg-info d-none"></span>
+      </div>
+      <form>
+        <a class="btn btn-outline-secondary" href="#" title="Help" target="_blank">
+          <i class="fa-solid fa-circle-question"></i>
+        </a>
+      </form>
+    </div>
+  </nav>
+  <main class="container-fluid">
+    <div id="tips-setup" class="alert alert-warning mt-3 d-none" role="alert">
+      <i class="fa-solid fa-lightbulb"></i>
+      Please config the provider in <a href="options.html" target="_blank">option page</a>.
+    </div>
+    <div id="tips-save" class="alert alert-info mt-3 d-none" role="alert">
+      <i class="fa-solid fa-lightbulb"></i>
+      Please right click on image to start saving.
+    </div>
+    <div id="retrieving-image" class="alert alert-info mt-3 d-none" role="alert">
+      <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+      Retrieving image data...
+    </div>
+    <div id="edit-panel" class="d-none">
+      <div id="cloud-image-container" class="mb-3">
+        <img id="cloud-image" alt="Image" />
+      </div>
+      <form id="edit-form" class="d-none">
+        <div class="mb-3">
+          <label for="cloud-directory" class="form-label">Directory</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="cloud-directory" name="cloud-directory" maxlength="200"
+              required="required" />
+            <button id="cloud-directory-picker" class="btn btn-outline-secondary" type="button"
+              title="Pick a directory">
+              <i class="fa-solid fa-folder-open"></i>
+            </button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label for="cloud-file-name" class="form-label">File Name</label>
+          <input type="text" class="form-control" id="cloud-file-name" name="cloud-file-name" maxlength="200"
+            required="required" />
+        </div>
+        <div class="mb-3">
+          <label for="cloud-file-info" class="form-label">
+            File Info
+            <span class="badge text-bg-info">for reference only</span>
+          </label>
+          <input type="text" class="form-control" id="cloud-file-info" name="cloud-file-info" readonly="readonly" />
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fa-solid fa-save"></i>
+          <span class="spinner-border spinner-border-sm d-none" aria-hidden="true"></span>
+          <span class="visually-hidden" role="status">Loading...</span>
+          Save
+        </button>
+      </form>
+    </div>
+    <div id="upload-success-alert" class="alert alert-success mt-3 d-none" role="alert">
+      <i class="fa-solid fa-check"></i>
+      Image uploaded successfully!
+      <a href="" target="_blank">[Preview]</a>
+    </div>
+    <div id="common-error" class="alert alert-danger mt-3 d-none" role="alert">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span></span>
+    </div>
+  </main>
+  <!--Directory picker-->
+  <div id="dir-picker-modal" class="modal fade modal-second" tabindex="-1" aria-labelledby="dir-picker-modal-title"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="dir-picker-modal-title">Directory Picker</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="dir-picker-form" autocomplete="off">
+            <div id="dir-picker-view"></div>
+          </form>
+        </div>
+        <div class="modal-footer align-items-start">
+          <button type="submit" class="btn btn-primary" form="dir-picker-form">
+            <i class="fa-solid fa-check"></i>
+            Select
+          </button>
+          <button type="button" class="btn btn-outline-secondary ms-auto" data-bs-dismiss="modal">
+            <i class="fa-solid fa-xmark"></i>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+  <script type="module" src="js/sidebar.js"></script>
+</body>
+
+</html>

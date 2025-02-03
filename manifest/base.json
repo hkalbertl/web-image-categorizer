@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Web Image Categorizer",
+  "short_name": "WIC",
+  "description": "Save images from webpages to a cloud storage provider using custom naming templates.",
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "sidebar_action": {
+    "default_title": "WIC Sidebar",
+    "default_panel": "sidebar.html",
+    "open_at_install": false
+  },
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "notifications",
+    "storage"
+  ],
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "icons": {
+    "32": "icons/wic-32.png",
+    "48": "icons/wic-48.png",
+    "128": "icons/wic-128.png",
+    "512": "icons/wic-512.png"
+  }
+}

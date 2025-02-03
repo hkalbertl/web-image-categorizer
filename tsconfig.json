@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "ESNext",
+    "strict": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": false,
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "types": [
+      "firefox-webext-browser",
+      "webextension-polyfill",
+      "bootstrap"
+    ]
+  },
+  "include": [
+    "src/**/*",
+    "webpack.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "utils"
+  ],
+  "ts-node": {
+    "esm": true
+  }
+}
