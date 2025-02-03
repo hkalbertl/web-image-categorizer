@@ -13,8 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const imagePreview = WIC.getElement<HTMLImageElement>('cloud-image');
   const dirPickerModal = new bootstrap.Modal('#dir-picker-modal');
 
-  // Initial function
-  console.log('Starting sidebar page...');
+  // Config dark theme
   WIC.configBsTheme();
 
   // Check config

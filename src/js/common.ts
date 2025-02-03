@@ -138,21 +138,21 @@ const WIC = {
   },
   /**
    * Copy element value.
-   * @param {string} fromElemId
-   * @param {string} toElemId
+   * @param fromElemId From element ID.
+   * @param toElemId To element ID.
    */
   copyValue: function (fromElemId: string, toElemId: string) {
-    const fromElem = document.getElementById(toElemId) as HTMLInputElement;
-    const toElem = document.getElementById(fromElemId) as HTMLInputElement;
+    const fromElem = document.getElementById(fromElemId) as HTMLInputElement;
+    const toElem = document.getElementById(toElemId) as HTMLInputElement;
     if (fromElem && toElem) {
       toElem.value = fromElem.value;
     }
   },
   /**
    * Check the specified URL is matched to the pattern.
-   * @param {string} targetUrl
-   * @param {string} pattern
-   * @returns {boolean} Return true if the URL matched to pattern.
+   * @param targetUrl Target URL, such as https://www.example.com/posts/123456
+   * @param pattern The matching pattern, such as https://www.example.com/posts/*
+   * @returns Return true if the URL matched to pattern.
    */
   isUrlMatch: function (targetUrl: string, pattern?: string): boolean {
     if (pattern) {
@@ -162,9 +162,9 @@ const WIC = {
   },
   /**
    * Match referrer with templates and generate destination directory and file name.
-   * @param {WICTemplate[] | null} templates WIC naming templates.
-   * @param {string} referrer The URL contain target image.
-   * @param {string|null} imageFormat The content type of image, such as `image/jpeg`.
+   * @param templates WIC naming templates.
+   * @param referrer The URL contain target image.
+   * @param imageFormat The content type of image, such as `image/jpeg`.
    * @returns The generated directory and file name.
    */
   matchTemplate: function (templates: WICTemplate[] | null, referrer: string, pageTitle: string, imageFormat: string | null) {
@@ -269,8 +269,8 @@ const WIC = {
   },
   /**
    * Extract all curly brace patterns in specified text.
-   * @param {string} input
-   * @returns {Array<string>|null} Return an array of curly brace patterns, or null if the input text is not valid.
+   * @param input
+   * @returns Return an array of curly brace patterns, or null if the input text is not valid.
    */
   extractCurlyBracePatterns: function (input: string): string[] | null {
     if ('string' === typeof input) {
@@ -284,8 +284,8 @@ const WIC = {
   },
   /**
    * Check if the input string has matched number of curly braces.
-   * @param {string} input The input text.
-   * @returns {boolean} Return true when curly braces matched.
+   * @param input The input text.
+   * @returns Return true when curly braces matched.
    */
   hasMatchedCurlyBraces: function (input: string): boolean {
     // Regular expression to check for nested curly braces

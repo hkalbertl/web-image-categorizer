@@ -129,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
 
       // Perform basic validation
-      const record = {
+      const record: WICTemplate = {
         url: urlElem.value.trim(),
         directory: directoryElem.value.trim(),
         fileName: fileNameElem.value.trim()
@@ -186,11 +186,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }, false);
 
-    document.getElementById('template-add-button')!.addEventListener('click', () => {
+    WIC.getElement<HTMLButtonElement>('template-add-button').addEventListener('click', () => {
       showTemplateEditModal(-1);
     });
 
-    document.getElementById('url-test-modal-button')!.addEventListener('click', () => {
+    WIC.getElement<HTMLButtonElement>('url-test-modal-button').addEventListener('click', () => {
       showTemplateUrlTesterModal();
     });
 
@@ -283,8 +283,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const editButton = createIconButton('btn-primary', 'fa-edit', index.toString());
         secondTd.appendChild(editButton);
         editButton.addEventListener('click', evt => {
-          const itemRow = (evt.currentTarget as HTMLButtonElement).value;
-          const rowIndex = parseInt(itemRow);
+          const rawRowIndex = (evt.currentTarget as HTMLButtonElement).value,
+            rowIndex = parseInt(rawRowIndex);
           showTemplateEditModal(rowIndex);
         });
         // Add `delete` button
