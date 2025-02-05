@@ -1,4 +1,4 @@
-# web-image-categorizer
+# Web Image Categorizer
 
 Web Image Categorizer (WIC) is a Firefox add-on that helps save images from webpages to [FileLu](https://filelu.com/), a secure and privacy-first cloud storage provider, using custom naming templates.
 
@@ -28,7 +28,7 @@ Thank you for using Web Image Categorizer. By using this add-on, you agree to th
   * The author reserves the right to modify these terms at any time. Any changes will be updated in the README page.
 
 ## Limitations
-* WIC used the [context menu](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/user_interface/Context_menu_items) API [images](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType) context type to detect images. It may not work on images that are protected by security treatments. Such as webpages with right click disabled or images covered by other HTML elements.
+* WIC used the [context menu](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/user_interface/Context_menu_items) API to detect images with [images](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType) context type. It may not work on images that are protected by security treatments. Such as webpages with right click disabled or images covered by other HTML elements.
 
 ## Having problems?
 Please check the [wiki](https://github.com/hkalbertl/web-image-categorizer/wiki) pages for more.

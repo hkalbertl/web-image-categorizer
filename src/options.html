@@ -135,7 +135,7 @@
             <option value="4">Allow all notifications</option>
             <option value="3">Notify when image saved or error occurred</option>
             <option value="2">Notify only when errors ocurred</option>
-            <option value="1">Disabled (You have to check the result manually in your storage provider)</option>
+            <option value="1">Disabled (You have to check the result manually on FileLu)</option>
           </select>
           <div class="form-text">
             Notifications are available when sidebar is disabled.
@@ -195,43 +195,53 @@
         <div class="modal-body">
           <form id="template-form" autocomplete="off" class="needs-validation" novalidate="novalidate">
             <div class="mb-3">
-              <label for="template-url" class="form-label">URL Matching</label>
+              <label for="template-url-pattern" class="form-label">URL Pattern</label>
               <div class="input-group">
-                <input type="text" class="form-control" id="template-url" maxlength="200" required="required" />
-                <button class="btn btn-outline-secondary" type="button" id="url-test-modal-button">
+                <input type="text" class="form-control" id="template-url-pattern" maxlength="200" required="required" />
+                <button class="btn btn-outline-secondary" type="button" id="template-url-pattern-test-button">
                   <i class="fa-solid fa-flask-vial"></i>
                 </button>
                 <div class="invalid-feedback">
-                  URL Matching is required.
+                  URL Pattern is required.
                 </div>
               </div>
               <div class="form-text">
-                The search text for matching web pages. Wildcard character * can be used. For example:
+                The URL search pattern for matching web pages. Wildcard character * can be used. For example:
                 <ul>
                   <li>https://www.example1.com/*</li>
                   <li>https://www.example2.com/photo/*</li>
-                  <li>https://www.example3.com/*/photo*</li>
+                  <li>https://www.example3.com/*/photo?id=*</li>
                 </ul>
               </div>
             </div>
             <div class="mb-3">
               <label for="template-directory" class="form-label">Destination Directory Path</label>
-              <input type="text" class="form-control" id="template-directory" maxlength="200" />
-              <div id="template-directory-error" class="invalid-feedback"></div>
+              <div class="input-group">
+                <input type="text" class="form-control" id="template-directory" maxlength="200" />
+                <button class="btn btn-outline-secondary" type="button" id="template-directory-test-button">
+                  <i class="fa-solid fa-flask-vial"></i>
+                </button>
+                <div id="template-directory-error" class="invalid-feedback"></div>
+              </div>
               <div class="form-text mb-3">
-                Full path to the directory on your storage provider for saving target image. WIC parameters supported.
+                Full path to the directory on FileLu for saving target image. WIC parameters supported.
                 For example:
                 <ul class="mb-0">
                   <li>/{host}</li>
-                  <li>/example1/{now-YYYY}</li>
-                  <li>/example2/photo_{path-1}</li>
+                  <li>/example1/{now-YYYYMM}</li>
+                  <li>/example2/img{now-YYMM}_{path-1}</li>
                 </ul>
-                Leave blank to save files at the root level of the storage provider.
+                Leave blank to save files at the root level of FileLu.
               </div>
               <div class="mb-3">
                 <label for="template-file-name" class="form-label">File Name</label>
-                <input type="text" class="form-control" id="template-file-name" maxlength="200" />
-                <div id="template-file-name-error" class="invalid-feedback"></div>
+                <div class="input-group">
+                  <input type="text" class="form-control" id="template-file-name" maxlength="200" />
+                  <button class="btn btn-outline-secondary" type="button" id="template-file-name-test-button">
+                    <i class="fa-solid fa-flask-vial"></i>
+                  </button>
+                  <div id="template-file-name-error" class="invalid-feedback"></div>
+                </div>
                 <div class="form-text mb-3">
                   The image file name template <b>without extension name</b>. WIC parameters supported. For example:
                   <ul class="mb-0">
@@ -264,18 +274,20 @@
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h1 class="modal-title fs-5" id="url-test-modal-title">URL Matching Tester</h1>
+          <h1 class="modal-title fs-5" id="url-test-modal-title">URL Pattern Tester</h1>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <form id="url-test-form" autocomplete="off">
+          <form id="url-test-form" class="needs-validation" autocomplete="off" novalidate="novalidate">
             <div class="mb-3">
-              <label for="url-test-pattern" class="form-label">URL Matching</label>
-              <input type="text" class="form-control" id="url-test-pattern" maxlength="200" required="required" />
+              <label for="url-test-pattern" class="form-label">URL Pattern</label>
+              <input type="text" class="form-control" id="url-test-pattern" maxlength="200" />
+              <div id="url-test-pattern-error" class="invalid-feedback">Required.</div>
             </div>
             <div class="mb-3">
               <label for="url-test-input" class="form-label">Source URL</label>
-              <input type="text" class="form-control" id="url-test-input" required="required" />
+              <input type="text" class="form-control" id="url-test-input" />
+              <div id="url-test-input-error" class="invalid-feedback"></div>
             </div>
             <div class="alert alert-success">
               <i class="fa-solid fa-check"></i>
@@ -289,6 +301,54 @@
         </div>
         <div class="modal-footer align-items-start">
           <button type="submit" class="btn btn-success" form="url-test-form">
+            <i class="fa-solid fa-flask-vial"></i>
+            Test
+          </button>
+          <button type="button" class="btn btn-outline-primary">
+            <i class="fa-solid fa-paper-plane"></i>
+            Use
+          </button>
+          <button type="button" class="btn btn-outline-secondary ms-auto" data-bs-dismiss="modal">
+            <i class="fa-solid fa-xmark"></i>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--Param test modal-->
+  <div id="param-test-modal" class="modal fade modal-second" tabindex="-1" aria-labelledby="param-test-modal-title"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="param-test-modal-title">WIC Parameter Tester</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="param-test-form" class="needs-validation" autocomplete="off" novalidate="novalidate">
+            <div class="mb-3">
+              <label for="param-test-pattern" class="form-label">Pattern</label>
+              <input type="text" class="form-control" id="param-test-pattern" maxlength="200" />
+              <div id="param-test-pattern-error" class="invalid-feedback"></div>
+            </div>
+            <div class="mb-3">
+              <label for="param-test-url" class="form-label">Source URL</label>
+              <input type="text" class="form-control" id="param-test-url" />
+              <div id="param-test-url-error" class="invalid-feedback"></div>
+            </div>
+            <div class="alert alert-success">
+              <i class="fa-solid fa-check"></i>
+              Result: <span></span>
+            </div>
+            <div class="alert alert-danger">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span></span>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer align-items-start">
+          <button type="submit" class="btn btn-success" form="param-test-form">
             <i class="fa-solid fa-flask-vial"></i>
             Test
           </button>

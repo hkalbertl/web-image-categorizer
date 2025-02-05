@@ -10,8 +10,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   const templateModalElement = WIC.getElement<HTMLDivElement>('template-modal');
   const templateModal = new bootstrap.Modal(templateModalElement);
   const secondaryBackdrop = WIC.getElement<HTMLDivElement>('secondary-modal-backdrop');
+  const urlTestForm = WIC.getElement<HTMLFormElement>('url-test-form');
   const urlTestModalElement = WIC.getElement<HTMLDivElement>('url-test-modal');
-  const templateUrlTesterModal = new bootstrap.Modal(urlTestModalElement, {
+  const urlTestModal = new bootstrap.Modal(urlTestModalElement, {
+    backdrop: false // Disable default backdrop for the second modal
+  });
+  const paramTestForm = WIC.getElement<HTMLFormElement>('param-test-form');
+  const paramTestModalElement = WIC.getElement<HTMLDivElement>('param-test-modal');
+  const paramTestModal = new bootstrap.Modal(paramTestModalElement, {
     backdrop: false // Disable default backdrop for the second modal
   });
   const onScreenTemplates: WICTemplate[] = [];
@@ -120,21 +126,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       evt.stopPropagation();
 
       // Reset form elements
-      const urlElem = WIC.getElement<HTMLInputElement>('template-url'),
+      const urlPatternElem = WIC.getElement<HTMLInputElement>('template-url-pattern'),
         directoryElem = WIC.getElement<HTMLInputElement>('template-directory'),
         fileNameElem = WIC.getElement<HTMLInputElement>('template-file-name');
-      [urlElem, directoryElem, fileNameElem].forEach(elem => {
+      [urlPatternElem, directoryElem, fileNameElem].forEach(elem => {
         elem.setCustomValidity('');
         elem.classList.remove('invalid', 'is-valid', 'is-invalid');
       });
 
       // Perform basic validation
       const record: WICTemplate = {
-        url: urlElem.value.trim(),
+        url: urlPatternElem.value.trim(),
         directory: directoryElem.value.trim(),
         fileName: fileNameElem.value.trim()
       };
-      let isValid = urlElem.checkValidity();
+      let isValid = urlPatternElem.checkValidity();
 
       // Check for directory / file name patterns
       if (record.directory) {
@@ -169,31 +175,74 @@ document.addEventListener('DOMContentLoaded', async () => {
       form.classList.add('was-validated');
     }, false);
 
-    document.getElementById('url-test-form')!.addEventListener('submit', evt => {
+    urlTestForm.addEventListener('submit', evt => {
+      // Stop standard form submit
       evt.preventDefault();
-      const form = evt.target as HTMLFormElement,
-        successAlert = form.querySelector('.alert-success') as HTMLDivElement,
-        errorAlert = form.querySelector('.alert-danger') as HTMLDivElement;
-      const patternElement = WIC.getElement<HTMLInputElement>('url-test-pattern'),
-        pattern = patternElement.value,
-        input = WIC.getElement<HTMLInputElement>('url-test-input').value;
-      if (WIC.isUrlMatch(input, pattern)) {
-        WIC.setElementsVisibility(successAlert, true);
-        WIC.setElementsVisibility(errorAlert, false);
+      evt.stopPropagation();
+
+      // Get elements
+      const successAlert = urlTestForm.querySelector('.alert-success') as HTMLDivElement,
+        errorAlert = urlTestForm.querySelector('.alert-danger') as HTMLDivElement,
+        patternElem = WIC.getElement<HTMLInputElement>('url-test-pattern'),
+        sourceUrlElem = WIC.getElement<HTMLInputElement>('url-test-input');
+
+      // Reset form
+      [patternElem, sourceUrlElem].forEach(elem => {
+        elem.setCustomValidity('');
+        elem.classList.remove('invalid', 'is-valid', 'is-invalid');
+      });
+      WIC.setElementsVisibility([successAlert, errorAlert], false);
+      urlTestForm.classList.remove('was-validated');
+
+      // Perform basic validation
+      let isValid = true, itemError: string | null = null;
+      const pattern = patternElem.value.trim();
+      if (!pattern) {
+        itemError = 'Required';
       } else {
-        WIC.setElementsVisibility(successAlert, false);
-        WIC.setElementsVisibility(errorAlert, true);
+        patternElem.value = pattern;
       }
+      if (itemError) {
+        WIC.getElement<HTMLDivElement>('url-test-pattern-error').innerText = itemError;
+        patternElem.setCustomValidity(itemError);
+        isValid = false;
+      }
+      itemError = null;
+
+      const sourceUrl = sourceUrlElem.value.trim();
+      if (!sourceUrl) {
+        itemError = 'Required';
+      } else if (-1 === sourceUrl.search(/^https?\:\/\/[^\s]+/)) {
+        itemError = 'Invalid URL format.';
+      } else {
+        sourceUrlElem.value = sourceUrl;
+      }
+      if (itemError) {
+        WIC.getElement<HTMLDivElement>('url-test-input-error').innerText = itemError;
+        sourceUrlElem.setCustomValidity(itemError);
+        isValid = false;
+      }
+      itemError = null;
+
+      // Perform basic validation
+      if (isValid) {
+        // Check URL is matched
+        if (WIC.isUrlMatch(sourceUrl, pattern)) {
+          WIC.setElementsVisibility(successAlert, true);
+          WIC.setElementsVisibility(errorAlert, false);
+        } else {
+          WIC.setElementsVisibility(successAlert, false);
+          WIC.setElementsVisibility(errorAlert, true);
+        }
+      }
+
+      urlTestForm.classList.add('was-validated');
     }, false);
 
+    // Template modal related
     WIC.getElement<HTMLButtonElement>('template-add-button').addEventListener('click', () => {
       showTemplateEditModal(-1);
     });
-
-    WIC.getElement<HTMLButtonElement>('url-test-modal-button').addEventListener('click', () => {
-      showTemplateUrlTesterModal();
-    });
-
     templateModalElement.addEventListener('show.bs.modal', () => {
       // Reset form
       const form = document.getElementById('template-form') as HTMLFormElement;
@@ -201,17 +250,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       form.querySelectorAll('input').forEach(element => element.value = '');
     });
     templateModalElement.addEventListener('shown.bs.modal', () => {
-      document.getElementById('template-url')!.focus();
+      document.getElementById('template-url-pattern')!.focus();
     });
 
+    // URL test modal related
+    WIC.getElement<HTMLButtonElement>('template-url-pattern-test-button').addEventListener('click', () => {
+      showTemplateUrlTesterModal();
+    });
     urlTestModalElement.addEventListener('show.bs.modal', () => {
       // Show backdrop
       secondaryBackdrop.classList.replace('d-none', 'show');
-      // Prepare form
-      WIC.copyValue('template-url', 'url-test-pattern');
-      WIC.getElement<HTMLInputElement>('url-test-input').value = '';
+      // Reset form
+      urlTestForm.classList.remove('was-validated');
+      urlTestForm.querySelectorAll('input').forEach(element => element.value = '');
+      WIC.copyValue('template-url-pattern', 'url-test-pattern');
       // Hide alerts
-      WIC.setElementsVisibility([...document.querySelectorAll('#url-test-form .alert')], false);
+      WIC.setElementsVisibility([...urlTestForm.querySelectorAll('.alert')], false);
     });
     urlTestModalElement.addEventListener('hide.bs.modal', () => {
       // Hide backdrop
@@ -219,9 +273,122 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     urlTestModalElement.querySelector('.modal-footer .btn-outline-primary')!.addEventListener('click', () => {
       // Send current pattern back to template edit modal
-      WIC.copyValue('url-test-pattern', 'template-url');
+      WIC.copyValue('url-test-pattern', 'template-url-pattern');
       // Close modal
-      templateUrlTesterModal.hide();
+      urlTestModal.hide();
+    });
+
+    // Param test modal related
+    WIC.getElement<HTMLButtonElement>('template-directory-test-button').addEventListener('click', () => {
+      paramTestModal.show();
+      paramTestForm.dataset.mode = 'dir';
+      WIC.copyValue('template-directory', 'param-test-pattern');
+    });
+    WIC.getElement<HTMLButtonElement>('template-file-name-test-button').addEventListener('click', () => {
+      paramTestModal.show();
+      paramTestForm.dataset.mode = 'file';
+      WIC.copyValue('template-file-name', 'param-test-pattern');
+    });
+    paramTestModalElement.addEventListener('show.bs.modal', () => {
+      // Show backdrop
+      secondaryBackdrop.classList.replace('d-none', 'show');
+      // Reset form
+      paramTestForm.classList.remove('was-validated');
+      paramTestForm.querySelectorAll('input').forEach(element => element.value = '');
+      // Hide alerts
+      WIC.setElementsVisibility([...paramTestForm.querySelectorAll('.alert')], false);
+    });
+    paramTestModalElement.addEventListener('shown.bs.modal', () => {
+      WIC.getElement<HTMLInputElement>('param-test-pattern').focus();
+    });
+    paramTestModalElement.addEventListener('hide.bs.modal', () => {
+      // Hide backdrop
+      secondaryBackdrop.classList.replace('show', 'd-none');
+    });
+    paramTestModalElement.querySelector('button.btn-outline-primary')!.addEventListener('click', () => {
+      // Copy pattern back to previous screen
+      let targetId = 'dir' === paramTestForm.dataset.mode ? 'template-directory' : 'template-file-name';
+      WIC.copyValue('param-test-pattern', targetId);
+      // Close modal
+      paramTestModal.hide();
+    });
+    paramTestForm.addEventListener('submit', evt => {
+      // Stop standard form submit
+      evt.preventDefault();
+      evt.stopPropagation();
+
+      // Reset form elements
+      const successAlert = paramTestForm.querySelector('.alert-success') as HTMLDivElement,
+        errorAlert = paramTestForm.querySelector('.alert-danger') as HTMLDivElement,
+        patternElem = WIC.getElement<HTMLInputElement>('param-test-pattern'),
+        sourceUrlElem = WIC.getElement<HTMLInputElement>('param-test-url');
+      [patternElem, sourceUrlElem].forEach(elem => {
+        elem.setCustomValidity('');
+        elem.classList.remove('invalid', 'is-valid', 'is-invalid');
+      });
+      WIC.setElementsVisibility([successAlert, errorAlert], false);
+      paramTestForm.classList.remove('was-validated');
+
+      // Perform basic validation
+      let isValid = true, itemError: string | null = null;
+      const isDirMode = 'dir' === paramTestForm.dataset.mode;
+      const pattern = patternElem.value.trim();
+      if (!pattern) {
+        itemError = 'Required';
+      } else {
+        itemError = validateTemplateInput(pattern, isDirMode);
+      }
+      if (itemError) {
+        WIC.getElement<HTMLDivElement>('param-test-pattern-error').innerText = itemError;
+        patternElem.setCustomValidity(itemError);
+        isValid = false;
+      } else {
+        patternElem.value = pattern;
+      }
+      itemError = null;
+
+      const sourceUrl = sourceUrlElem.value.trim();
+      if (!sourceUrl) {
+        itemError = 'Required';
+      } else if (-1 === sourceUrl.search(/^https?\:\/\/[^\s]+/)) {
+        itemError = 'Invalid URL format.';
+      } else {
+        sourceUrlElem.value = sourceUrl;
+      }
+      if (itemError) {
+        WIC.getElement<HTMLDivElement>('param-test-url-error').innerText = itemError;
+        sourceUrlElem.setCustomValidity(itemError);
+        isValid = false;
+      }
+
+      if (isValid) {
+        itemError = null;
+        try {
+          const matchTemplate: WICTemplate = { url: '*' };
+          if (isDirMode) {
+            matchTemplate.directory = pattern;
+          } else {
+            matchTemplate.fileName = pattern;
+          }
+          const matching = WIC.matchTemplate([matchTemplate], sourceUrl, 'Sample-Page-Title', 'image/jpeg');
+          if (matching && matching.isMatched) {
+            // Data matched
+            successAlert.querySelector('span')!.innerText = isDirMode ? matching.directory : matching.fileName;
+            WIC.setElementsVisibility(successAlert, true);
+          } else {
+            // Failed to match or required parameter does not exist
+            itemError = 'Failed to match, please double check parameters defined in pattern.';
+          }
+        } catch (ex) {
+          itemError = WIC.getErrorMessage(ex);
+        }
+        if (itemError) {
+          // Show error alert
+          errorAlert.querySelector('span')!.innerText = itemError;
+          WIC.setElementsVisibility(errorAlert, true);
+        }
+      }
+      paramTestForm.classList.add('was-validated');
     });
   }
 
@@ -299,7 +466,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  function validateTemplateInput(input: string, isDirectory: boolean) {
+  function validateTemplateInput(input: string, isDirectory: boolean): string | null {
     let itemError: string | null = null;
     // Check for directory path start character
     if (isDirectory && '/' !== input.charAt(0)) {
@@ -353,7 +520,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Fill template values, if available
     if (-1 !== rowIndex) {
       const record = onScreenTemplates[rowIndex];
-      WIC.getElement<HTMLInputElement>('template-url').value = record.url || '';
+      WIC.getElement<HTMLInputElement>('template-url-pattern').value = record.url || '';
       WIC.getElement<HTMLInputElement>('template-directory').value = record.directory || '';
       WIC.getElement<HTMLInputElement>('template-file-name').value = record.fileName || '';
     }
@@ -362,7 +529,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function showTemplateUrlTesterModal() {
-    templateUrlTesterModal.show();
+    urlTestModal.show();
   }
 
   /**

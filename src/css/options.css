@@ -16,6 +16,7 @@
   z-index: 1055; /* Ensure backdrop is below the second modal */
 }
 
-#url-test-form {
+#url-test-form,
+#param-test-form {
   min-height: 16em;
 }

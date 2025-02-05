@@ -17,6 +17,10 @@ const WIC = {
    */
   NOW_FORMAT: 'YYYYMMDDHHmmss',
   /**
+   * The date format for `today`.
+   */
+  TODAY_FORMAT: 'YYYYMMDD',
+  /**
    * Check client browser setting and apply dark theme when needed.
    */
   configBsTheme: function () {
@@ -67,8 +71,8 @@ const WIC = {
   },
   /**
    * Show or hide the list of elements.
-   * @param {*} targets
-   * @param {boolean} isShow
+   * @param targets Target element(s) or element IDs.
+   * @param isShow True to show or false to hide.
    */
   setElementsVisibility: function (targets: string | HTMLElement | any[], isShow: boolean = true) {
     let elements: HTMLElement[] = [];
@@ -93,6 +97,7 @@ const WIC = {
       }
     }
     // Set visibility
+    debugger;
     elements.forEach(element => {
       if (isShow) {
         element.classList.remove('d-none');
@@ -189,6 +194,9 @@ const WIC = {
           } else if ('{now}' === token) {
             // Substitute with current date/time with default format
             edited = edited.replace(token, now.format(WIC.NOW_FORMAT));
+          } else if ('{today}' === token) {
+            // Substitute with current date with default format
+            edited = edited.replace(token, now.format(WIC.TODAY_FORMAT));
           } else if (0 === token.indexOf('{now-')) {
             // Substitute with current date/time with custom format
             const format = token.substring(5, token.length - 1);
@@ -304,11 +312,24 @@ const WIC = {
     // Extract the content within braces
     const content = input.substring(1, input.length - 1);
     // Check input with exact matched
-    if (!['now', 'host', 'title'].some(item => content === item)) {
-      // Check input with prefixes
-      return ['now-', 'path-', 'query-'].some(item => 0 === content.indexOf(item) && content.length > item.length);
+    if (['now', 'today', 'host', 'title'].some(item => content === item)) {
+      return true;
     }
-    return true;
+    // Check input with prefixes
+    if (['now-', 'query-'].some(item => 0 === content.indexOf(item) && content.length > item.length)) {
+      // Assume the format / query string parameter is correct
+      return true;
+    }
+    // Check input with path- prefixes
+    if (0 === content.indexOf('path-') && 5 < content.length) {
+      // Make sure the path number is numeric
+      const pathNum = parseInt(content.substring(5));
+      if (!isNaN(pathNum) && 0 < pathNum) {
+        // It is numeric
+        return true;
+      }
+    }
+    return false;
   },
   /**
    * Check if the specified input text in valid for file name.
