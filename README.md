@@ -7,6 +7,12 @@ Web Image Categorizer (WIC) is a Firefox add-on that helps save images from webp
 * Supports naming templates based on webpage URLs so that images are saved to your preferred directory with your chosen file name.
 * Supports sidebar mode so that user can adjust the directory / file name just before saving to FileLu.
 
+## Demo 1 - Without Sidebar
+https://github.com/user-attachments/assets/80a826b5-4d8d-4b1d-830b-e2254b72a36f
+
+## Demo 2 - With Sidebar
+https://github.com/user-attachments/assets/a089d979-41c9-48f7-9620-0b193ba9f59e
+
 ## Terms of Use
 Thank you for using Web Image Categorizer. By using this add-on, you agree to the following terms:
 
