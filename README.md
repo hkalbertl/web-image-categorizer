@@ -25,8 +25,8 @@ https://github.com/user-attachments/assets/80a826b5-4d8d-4b1d-830b-e2254b72a36f
 https://github.com/user-attachments/assets/a089d979-41c9-48f7-9620-0b193ba9f59e
 
 ## Installation
-* Download and install the signed .xpi from [release page](https://github.com/hkalbertl/web-image-categorizer/releases) by using the [official instructions](https://extensionworkshop.com/documentation/publish/distribute-sideloading/).
-* (Coming soon) Install it from [official FireFox add-on site](https://addons.mozilla.org/)
+* Download and install the signed .xpi from [release page](https://github.com/hkalbertl/web-image-categorizer/releases) by using the [official instructions](https://extensionworkshop.com/documentation/publish/distribute-sideloading/#install-addon-from-file).
+* (Coming soon) Install it from official FireFox add-on site.
 
 ## Usage / Options
 Please check the [Wiki](https://github.com/hkalbertl/web-image-categorizer/wiki) for more information.
