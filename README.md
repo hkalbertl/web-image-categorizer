@@ -1,4 +1,4 @@
-# Web Image Categorizer
+# ![WIC Logo](src/icons/wic-32.png) Web Image Categorizer
 
 Web Image Categorizer (WIC) is a Firefox add-on that helps save images from webpages to [FileLu](https://filelu.com/), a secure and privacy-first cloud storage provider, using custom naming templates.
 
