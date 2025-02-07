@@ -44,17 +44,12 @@
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="dropbox-tab" data-bs-toggle="tab" data-bs-target="#dropbox-tab-pane"
               type="button" role="tab" aria-controls="dropbox-tab-pane" aria-selected="false" value="Dropbox"
-              disabled="disabled">Dropbox</button>
+              >Dropbox</button>
           </li>
           <li class="nav-item" role="presentation">
             <button class="nav-link" id="gdrive-tab" data-bs-toggle="tab" data-bs-target="#gdrive-tab-pane"
-              type="button" role="tab" aria-controls="gdrive-tab-pane" aria-selected="false" disabled>Google
-              Drive</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="onedrive-tab" data-bs-toggle="tab" data-bs-target="#onedrive-tab-pane"
-              type="button" role="tab" aria-controls="onedrive-tab-pane" aria-selected="false" disabled>One
-              Drive</button>
+              type="button" role="tab" aria-controls="gdrive-tab-pane" aria-selected="false" value="GDrive"
+              >Google Drive</button>
           </li>
           -->
         </ul>
@@ -78,15 +73,14 @@
             </div>
             <div></div>
           </div>
+          <!--
           <div class="tab-pane fade" id="dropbox-tab-pane" role="tabpanel" aria-labelledby="dropbox-tab" tabindex="0">
             ...
           </div>
           <div class="tab-pane fade" id="gdrive-tab-pane" role="tabpanel" aria-labelledby="gdrive-tab" tabindex="0">
             ...
           </div>
-          <div class="tab-pane fade" id="onedrive-tab-pane" role="tabpanel" aria-labelledby="disabled-tab" tabindex="0">
-            ...
-          </div>
+          -->
         </div>
       </div>
     </div>
@@ -149,16 +143,10 @@
             <option value="image/webp">.WEBP (Modern image format developed by Google)</option>
           </select>
           <div class="form-text">
-            In case the image cannot be downloaded in its original format, WIC will use alternative method to download
-            image and save as above format.
+            If an image cannot be downloaded in its original format, WIC will use an alternative method to download and
+            save it in the specified format.
           </div>
         </div>
-        <!--
-        <div class="form-check form-switch">
-          <input class="form-check-input" type="checkbox" role="switch" id="prefer-header-name" />
-          <label class="form-check-label" for="prefer-header-name">Use file name from server if available</label>
-        </div>
-        -->
       </div>
     </div>
     <div class="d-flex mb-3">
@@ -206,7 +194,7 @@
                 </div>
               </div>
               <div class="form-text">
-                The URL search pattern for matching web pages. Wildcard character * can be used. For example:
+                The URL search pattern for matching web pages. The wildcard character <b>*</b> can be used. For example:
                 <ul>
                   <li>https://www.example1.com/*</li>
                   <li>https://www.example2.com/photo/*</li>
@@ -224,14 +212,18 @@
                 <div id="template-directory-error" class="invalid-feedback"></div>
               </div>
               <div class="form-text mb-3">
-                Full path to the directory on FileLu for saving target image. WIC parameters supported.
+                The full path to the directory on FileLu where the target image will be saved. <a
+                  href="https://github.com/hkalbertl/web-image-categorizer/wiki/Documentation#wic-parameters"
+                  target="_blank">WIC parameters</a> are supported. The path must start with the / character.
                 For example:
                 <ul class="mb-0">
                   <li>/{host}</li>
                   <li>/example1/{now-YYYYMM}</li>
                   <li>/example2/img{now-YYMM}_{path-1}</li>
                 </ul>
-                Leave blank to save files at the root level of FileLu.
+                Leave blank to save files to the <a
+                  href="https://github.com/hkalbertl/web-image-categorizer/wiki/Documentation#wic-fallback-location"
+                  target="_blank">fallback directory</a>.
               </div>
               <div class="mb-3">
                 <label for="template-file-name" class="form-label">File Name</label>
@@ -243,13 +235,18 @@
                   <div id="template-file-name-error" class="invalid-feedback"></div>
                 </div>
                 <div class="form-text mb-3">
-                  The image file name template <b>without extension name</b>. WIC parameters supported. For example:
+                  The image file name template <b>without extension name</b>. <a
+                    href="https://github.com/hkalbertl/web-image-categorizer/wiki/Documentation#wic-parameters"
+                    target="_blank">WIC parameters</a> are supported.
+                  For example:
                   <ul class="mb-0">
                     <li>photo{now}</li>
                     <li>{now-MMDD}{path-2}</li>
                     <li>image_{query-id}</li>
                   </ul>
-                  Leave blank to use current date/time, i.e. 20241231235958, as file name.
+                  Leave blank to use <a
+                    href="https://github.com/hkalbertl/web-image-categorizer/wiki/Documentation#wic-fallback-location"
+                    target="_blank">fallback file name</a>.
                 </div>
               </div>
             </div>

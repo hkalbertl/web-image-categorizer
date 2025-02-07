@@ -1,12 +1,12 @@
 {
   "name": "web-image-categorizer",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Save images from webpages to FileLu using custom naming templates.",
   "type": "module",
   "scripts": {
     "debug": "web-ext run -s build",
     "build": "node utils/merge-manifest.js 'firefox' && webpack",
-    "build-firefox": "node utils/merge-manifest.js 'firefox' && webpack && node utils/build-firefox.js"
+    "build-firefox": "npm run build && node utils/build-firefox.js"
   },
   "author": "Albert L",
   "license": "MIT",

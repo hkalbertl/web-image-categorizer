@@ -2,7 +2,6 @@
 
 Web Image Categorizer (WIC) is a Firefox add-on that helps save images from webpages to [FileLu](https://filelu.com/), a secure and privacy-first cloud storage provider, using custom naming templates.
 
-
 ## Motivation
 <details>
   <summary>Click to expand</summary>
@@ -10,6 +9,8 @@ Web Image Categorizer (WIC) is a Firefox add-on that helps save images from webp
   In 2024, there was a significant surge in the development of AI applications, and I was particularly impressed by the advancements in text-to-image generative AI technology. Over the course of a year, I used several applications, like Copilot, to generate images. As a result, I amassed a considerable collection of generated images, some of which were truly remarkable and worth preserving.
 
   To ensure the safekeeping of these images, I discovered FileLu, a platform that provides secure cloud storage and easy-to-integrate APIs. Given my preference for using Firefox, I decided to create this add-on to streamline the process of saving images from websites directly to my online storage. This add-on not only simplifies the workflow but also ensures that my valuable images are stored securely and efficiently.
+
+  If you are new to FileLu, please consider to register by using my <a href="https://filelu.com/5155514948.html" target="_blank">referral link</a>.
 </details>
 
 ## Features

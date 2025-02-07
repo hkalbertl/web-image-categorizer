@@ -421,7 +421,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /**
    * Build template table with specified template data.
-   * @param {Array<object>} templates
+   * @param templates
    */
   function buildTemplateTable(templates: WICTemplate[] | null) {
     // Reset table
