@@ -2,10 +2,6 @@
 
 Web Image Categorizer (WIC) is a Firefox add-on that helps save images from webpages to [FileLu](https://filelu.com/), a secure and privacy-first cloud storage provider, using custom naming templates.
 
-## Features
-* Downloads images from webpages in their original formats and save them to FileLu with just two clicks.
-* Supports naming templates based on webpage URLs so that images are saved to your preferred directory with your chosen file name.
-* Supports sidebar mode so that user can adjust the directory / file name just before saving to FileLu.
 
 ## Motivation
 <details>
@@ -16,6 +12,11 @@ Web Image Categorizer (WIC) is a Firefox add-on that helps save images from webp
   To ensure the safekeeping of these images, I discovered FileLu, a platform that provides secure cloud storage and easy-to-integrate APIs. Given my preference for using Firefox, I decided to create this add-on to streamline the process of saving images from websites directly to my online storage. This add-on not only simplifies the workflow but also ensures that my valuable images are stored securely and efficiently.
 </details>
 
+## Features
+* Downloads images from webpages in their original formats and save them to FileLu with just two clicks.
+* Supports naming templates based on webpage URLs so that images are saved to your preferred directory with your chosen file name.
+* Supports sidebar mode so that user can adjust the directory / file name just before saving to FileLu.
+
 ## Demo 1 - Without Sidebar
 https://github.com/user-attachments/assets/80a826b5-4d8d-4b1d-830b-e2254b72a36f
 
@@ -23,7 +24,7 @@ https://github.com/user-attachments/assets/80a826b5-4d8d-4b1d-830b-e2254b72a36f
 https://github.com/user-attachments/assets/a089d979-41c9-48f7-9620-0b193ba9f59e
 
 ## Usage / Options
-Please check the [wiki](/wiki) pages for more information.
+Please check the [Project Wiki](/wiki) for more information.
 
 ## Terms of Use
 Thank you for using Web Image Categorizer. By using this add-on, you agree to the following terms:
