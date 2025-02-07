@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         message.directory, message.fileName);
     } else if ('show-error' === message.action) {
       // Problem occurred in background script, hide elements
-      WIC.setElementsVisibility(['tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm], false);
+      WIC.setElementsVisibility(['retrieving-image', 'tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm], false);
       // Show error
       WIC.showErrorAlert(message.error);
     }

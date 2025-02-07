@@ -4,6 +4,8 @@ import FILELU from './filelu';
 import { WICConfig, WICImageData } from './models';
 
 (function () {
+  const openSidebarDelay = 200;
+
   // Save a copy of the config to be used for determinating sidebar mode
   let preloadedConfig: WICConfig;
   WIC.loadConfig().then(config => {
@@ -45,7 +47,7 @@ import { WICConfig, WICImageData } from './models';
           console.debug('Opening sidebar...');
           browser.sidebarAction.open().then(() => {
             // Add a small delay to allow sidebar to load
-            WIC.sleep(500).then(() => {
+            WIC.sleep(openSidebarDelay).then(() => {
               // Set retrieving image
               browser.runtime.sendMessage({ action: 'prepare-image' });
             });
@@ -73,7 +75,7 @@ import { WICConfig, WICImageData } from './models';
   async function handleContextMenuSaveClicked(imageUrl: string, tabUrl: string, tabTitle: string) {
     // Load config
     const config = await WIC.loadConfig();
-    if (!config.provider) {
+    if (!config.provider || !imageUrl) {
       return;
     }
 
@@ -86,6 +88,31 @@ import { WICConfig, WICImageData } from './models';
       iconUrl: imageUrl
     };
 
+    // Check the image URL format
+    const isDataUrl = 0 === imageUrl.search(/^data\:image\//gi);
+    if (!isDataUrl && -1 === imageUrl.search(/^https?\:\/\//gi)) {
+      // Unsupported image URL detected
+      const errorMsg = `Unsupported image format: ${imageUrl}`;
+      if (useSideBar) {
+        // Send the error message to sidebar
+        WIC.sleep(openSidebarDelay).then(() => {
+          // Show error after open delay
+          browser.runtime.sendMessage({
+            action: 'show-error',
+            error: errorMsg
+          });
+        });
+      } else if (2 <= notifyLevel) {
+        // Show error notification
+        browser.notifications.create(notifyId, {
+          ...notifyBase,
+          message: `⚠ ${errorMsg}`
+        });
+      }
+      return;
+    }
+
+    // Show processing notification if enabled
     if (!useSideBar && 4 <= notifyLevel) {
       browser.notifications.create(notifyId, {
         ...notifyBase,
@@ -96,7 +123,14 @@ import { WICConfig, WICImageData } from './models';
     // Start process image
     try {
       // Download image
-      const imageData = await downloadImageByUrl(imageUrl, tabUrl);
+      let imageData: WICImageData;
+      if (isDataUrl) {
+        // Parse dataURL
+        imageData = await parseDataUrl(imageUrl);
+      } else {
+        // Download image
+        imageData = await downloadImageByUrl(imageUrl, tabUrl);
+      }
       const imageBlob = new Blob([imageData.blobArray!], { type: imageData.blobType! });
       const displaySize = WIC.toDisplaySize(imageBlob.size);
       // Generate directory / file name
@@ -150,20 +184,21 @@ import { WICConfig, WICImageData } from './models';
       }
     } catch (ex) {
       // Error occurred
+      const errorMsg = WIC.getErrorMessage(ex) || 'Unknown download error...';
       console.error('Failed to download image...', ex);
-      if (2 <= notifyLevel) {
-        let message: string;
-        if (ex instanceof Error) {
-          message = ex.message;
-        } else if ('string' === typeof ex) {
-          message = ex;
-        } else {
-          message = 'Unknown download error...';
-        }
+      if (useSideBar) {
+        // Show error after delay
+        WIC.sleep(openSidebarDelay).then(() => {
+          browser.runtime.sendMessage({
+            action: 'show-error',
+            error: errorMsg
+          });
+        });
+      } else if (2 <= notifyLevel) {
         await browser.notifications.clear(notifyId);
         await browser.notifications.create(notifyId, {
           ...notifyBase,
-          message: message
+          message: errorMsg
         });
       }
     }
@@ -175,7 +210,7 @@ import { WICConfig, WICImageData } from './models';
    * @param referrer URL that contain above image.
    * @returns Downloaded image with meta data.
    */
-  function downloadImageByUrl(imageUrl: string, referrer: string): Promise<WICImageData> {
+  async function downloadImageByUrl(imageUrl: string, referrer: string): Promise<WICImageData> {
     return new Promise(async (resolve, reject) => {
       // Load config
       const config = await WIC.loadConfig();
@@ -259,6 +294,53 @@ import { WICConfig, WICImageData } from './models';
         img.crossOrigin = 'anonymous'; // Magic
         img.src = imageUrl;
       }
+    });
+  }
+
+  /**
+   * Parse image in dataURL format.
+   * @param imageUrl Target image data.
+   * @returns Parsed image with meta data.
+   */
+  async function parseDataUrl(imageUrl: string): Promise<WICImageData> {
+    /*
+    Sample data:
+    https://gist.github.com/drtaka/b5b77281ee523d3f61a3bbbe8a4ce3ee
+    https://gistpreview.github.io/?b5b77281ee523d3f61a3bbbe8a4ce3ee
+    https://jsfiddle.net/Jan_Miksovsky/yy7Zs/
+    */
+    return new Promise(async (resolve, reject) => {
+      // Prepare return object
+      const result = new WICImageData();
+      result.mode = 'image';
+
+      // Extract image data from dataURL
+      const [header, base64] = imageUrl.split(',');
+      result.blobType = header.match(/:(.*?);/)![1];
+
+      // Parse image data
+      const binaryString = atob(base64);
+      const length = binaryString.length;
+      const buffer = new ArrayBuffer(length);
+      const uintArray = new Uint8Array(buffer);
+      for (let z = 0; z < length; z++) {
+        uintArray[z] = binaryString.charCodeAt(z);
+      }
+      result.blobArray = buffer;
+
+      // Create new image and config load event
+      const img = new Image();
+      img.onload = () => {
+        // Image download successfully, get dimension
+        result.dimension = `${img.naturalWidth}x${img.naturalHeight}`;
+        // All done, return result
+        resolve(result);
+      };
+      img.onerror = () => {
+        // Error on loading image?
+        reject(new Error('Image failed to load.'));
+      };
+      img.src = imageUrl;
     });
   }
 })();

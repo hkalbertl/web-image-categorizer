@@ -53,6 +53,7 @@ Thank you for using Web Image Categorizer. By using this add-on, you agree to th
 
 ## Limitations
 * WIC uses the [context menu](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/user_interface/Context_menu_items) API to detect images with the [images](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType) context type. It may not work on images that are protected by security measures, such as webpages with right-click disabled or images covered by other HTML elements.
+* WIC currently supports image URLs with the standard `https://*` and `data:image/*` formats. URLs like `blob:*` are not supported.
 
 ## License
 Licensed under the [MIT](http://www.opensource.org/licenses/mit-license.php) license.

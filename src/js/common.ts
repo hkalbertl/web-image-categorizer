@@ -97,7 +97,6 @@ const WIC = {
       }
     }
     // Set visibility
-    debugger;
     elements.forEach(element => {
       if (isShow) {
         element.classList.remove('d-none');
