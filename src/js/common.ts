@@ -31,7 +31,7 @@ const WIC = {
   },
   /**
    * Show an alert with specified success message.
-   * @param {string} msg The success message.
+   * @param msg The success message.
    */
   showSuccessAlert: function (msg: string) {
     const alertElem = document.getElementById('common-success')!,
@@ -41,7 +41,7 @@ const WIC = {
   },
   /**
    * Show an alert with specified error message.
-   * @param {string} msg The error message.
+   * @param msg The error message.
    */
   showErrorAlert: function (msg: string) {
     const alertElem = document.getElementById('common-error')!,
@@ -51,8 +51,8 @@ const WIC = {
   },
   /**
    * Set the button with loading state or not.
-   * @param {Element} targetButton The button element.
-   * @param {boolean} isLoading Is loading or not.
+   * @param targetButton The button element.
+   * @param isLoading Is loading or not.
    */
   setButtonLoading: function (targetButton: HTMLButtonElement, isLoading: boolean) {
     const buttonIcon = targetButton.querySelector('i.fa-solid')!,

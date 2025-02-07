@@ -7,11 +7,23 @@ Web Image Categorizer (WIC) is a Firefox add-on that helps save images from webp
 * Supports naming templates based on webpage URLs so that images are saved to your preferred directory with your chosen file name.
 * Supports sidebar mode so that user can adjust the directory / file name just before saving to FileLu.
 
+## Motivation
+<details>
+  <summary>Click to expand</summary>
+
+  In 2024, there was a significant surge in the development of AI applications, and I was particularly impressed by the advancements in text-to-image generative AI technology. Over the course of a year, I used several applications, like Copilot, to generate images. As a result, I amassed a considerable collection of generated images, some of which were truly remarkable and worth preserving.
+
+  To ensure the safekeeping of these images, I discovered FileLu, a platform that provides secure cloud storage and easy-to-integrate APIs. Given my preference for using Firefox, I decided to create this add-on to streamline the process of saving images from websites directly to my online storage. This add-on not only simplifies the workflow but also ensures that my valuable images are stored securely and efficiently.
+</details>
+
 ## Demo 1 - Without Sidebar
 https://github.com/user-attachments/assets/80a826b5-4d8d-4b1d-830b-e2254b72a36f
 
 ## Demo 2 - With Sidebar
 https://github.com/user-attachments/assets/a089d979-41c9-48f7-9620-0b193ba9f59e
+
+## Usage / Options
+Please check the [wiki](/wiki) pages for more information.
 
 ## Terms of Use
 Thank you for using Web Image Categorizer. By using this add-on, you agree to the following terms:
@@ -34,10 +46,7 @@ Thank you for using Web Image Categorizer. By using this add-on, you agree to th
   * The author reserves the right to modify these terms at any time. Any changes will be updated in the README page.
 
 ## Limitations
-* WIC used the [context menu](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/user_interface/Context_menu_items) API to detect images with [images](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType) context type. It may not work on images that are protected by security treatments. Such as webpages with right click disabled or images covered by other HTML elements.
-
-## Having problems?
-Please check the [wiki](https://github.com/hkalbertl/web-image-categorizer/wiki) pages for more.
+* WIC uses the [context menu](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/user_interface/Context_menu_items) API to detect images with the [images](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType) context type. It may not work on images that are protected by security measures, such as webpages with right-click disabled or images covered by other HTML elements.
 
 ## License
 Licensed under the [MIT](http://www.opensource.org/licenses/mit-license.php) license.
