@@ -20,94 +20,10 @@ const WIC = {
    * The date format for `today`.
    */
   TODAY_FORMAT: 'YYYYMMDD',
-  /**
-   * Check client browser setting and apply dark theme when needed.
-   */
-  configBsTheme: function () {
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (prefersDark) {
-      document.documentElement.setAttribute('data-bs-theme', 'dark');
-    }
-  },
-  /**
-   * Show an alert with specified success message.
-   * @param msg The success message.
-   */
-  showSuccessAlert: function (msg: string) {
-    const alertElem = document.getElementById('common-success')!,
-      alertSpan = alertElem.querySelector('span')!;
-    alertElem.classList.remove('d-none');
-    alertSpan.innerText = msg;
-  },
-  /**
-   * Show an alert with specified error message.
-   * @param msg The error message.
-   */
-  showErrorAlert: function (msg: string) {
-    const alertElem = document.getElementById('common-error')!,
-      alertSpan = alertElem.querySelector('span')!;
-    alertElem.classList.remove('d-none');
-    alertSpan.innerText = msg;
-  },
-  /**
-   * Set the button with loading state or not.
-   * @param targetButton The button element.
-   * @param isLoading Is loading or not.
-   */
-  setButtonLoading: function (targetButton: HTMLButtonElement, isLoading: boolean) {
-    const buttonIcon = targetButton.querySelector('i.fa-solid')!,
-      buttonSpinner = targetButton.querySelector('span.spinner-border')!;
-    if (isLoading) {
-      targetButton.disabled = true;
-      buttonIcon.classList.add('d-none');
-      buttonSpinner.classList.remove('d-none');
 
-      document.getElementById('common-error')!.classList.add('d-none');
-    } else {
-      targetButton.disabled = false;
-      buttonIcon.classList.remove('d-none');
-      buttonSpinner.classList.add('d-none');
-    }
-  },
-  /**
-   * Show or hide the list of elements.
-   * @param targets Target element(s) or element IDs.
-   * @param isShow True to show or false to hide.
-   */
-  setElementsVisibility: function (targets: string | HTMLElement | any[], isShow: boolean = true) {
-    let elements: HTMLElement[] = [];
-    if (Array.isArray(targets)) {
-      // For array targets
-      targets.forEach(item => {
-        if (item instanceof HTMLElement) {
-          elements.push(item);
-        } else if ('string' === typeof item) {
-          const target = document.getElementById(item);
-          if (target) {
-            elements.push(target);
-          }
-        }
-      });
-    } else if (targets instanceof HTMLElement) {
-      elements.push(targets);
-    } else if ('string' === typeof targets) {
-      const target = document.getElementById(targets);
-      if (target) {
-        elements.push(target);
-      }
-    }
-    // Set visibility
-    elements.forEach(element => {
-      if (isShow) {
-        element.classList.remove('d-none');
-      } else {
-        element.classList.add('d-none');
-      }
-    });
-  },
   /**
    * Get the saved config, default config will be used when not found.
-   * @returns {Promise<WICConfig>} The config object.
+   * @returns The config object.
    */
   loadConfig: async function (): Promise<WICConfig> {
     // Load save config, if any
@@ -125,8 +41,8 @@ const WIC = {
   },
   /**
    * Generate readable size based on specified blob size.
-   * @param {number} value The numeric blob size.
-   * @returns {string} The readable size, such as "123.4 KB" / "4.6 MB".
+   * @param value The numeric blob size.
+   * @returns The readable size, such as "123.4 KB" / "4.6 MB".
    */
   toDisplaySize: function (value: number): string {
     if (value && !isNaN(value)) {
@@ -140,18 +56,7 @@ const WIC = {
     }
     return 'N/A';
   },
-  /**
-   * Copy element value.
-   * @param fromElemId From element ID.
-   * @param toElemId To element ID.
-   */
-  copyValue: function (fromElemId: string, toElemId: string) {
-    const fromElem = document.getElementById(fromElemId) as HTMLInputElement;
-    const toElem = document.getElementById(toElemId) as HTMLInputElement;
-    if (fromElem && toElem) {
-      toElem.value = fromElem.value;
-    }
-  },
+
   /**
    * Check the specified URL is matched to the pattern.
    * @param targetUrl Target URL, such as https://www.example.com/posts/123456
@@ -361,35 +266,6 @@ const WIC = {
       return ex;
     }
     return `${ex}`;
-  },
-  /**
-   * Get the element by specified ID in specified type.
-   * @param id Input ID.
-   * @returns The element.
-   */
-  getElement: function <T>(id: string): T {
-    return document.getElementById(id) as T;
-  },
-  /**
-   * Trigger specified event on target element.
-   * @param element Element or element ID.
-   * @param eventType Event type, such as `click` and `change`.
-   */
-  triggerEvent: function (element: string | HTMLElement, eventType: string) {
-    let targetElement: HTMLElement | undefined;
-    if ('string' === typeof element) {
-      const foundElement = document.getElementById(element);
-      if (foundElement) {
-        targetElement = foundElement;
-      }
-    } else {
-      targetElement = element;
-    }
-    if (targetElement) {
-      targetElement.dispatchEvent(new Event(eventType));
-    } else {
-      console.warn('Failed to trigger event, element not found.');
-    }
   }
 };
 

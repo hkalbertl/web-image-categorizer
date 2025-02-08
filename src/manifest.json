@@ -13,17 +13,6 @@
   "action": {
     "default_popup": "popup.html"
   },
-  "sidebar_action": {
-    "default_title": "WIC Sidebar",
-    "default_panel": "sidebar.html",
-    "open_at_install": false
-  },
-  "permissions": [
-    "activeTab",
-    "contextMenus",
-    "notifications",
-    "storage"
-  ],
   "host_permissions": [
     "*://*/*"
   ],
@@ -32,6 +21,17 @@
     "48": "icons/wic-48.png",
     "128": "icons/wic-128.png",
     "512": "icons/wic-512.png"
+  },
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "notifications",
+    "storage"
+  ],
+  "sidebar_action": {
+    "default_title": "WIC Sidebar",
+    "default_panel": "sidebar.html",
+    "open_at_install": false
   },
   "background": {
     "scripts": [

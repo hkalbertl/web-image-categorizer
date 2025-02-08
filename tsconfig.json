@@ -12,7 +12,8 @@
     "types": [
       "firefox-webext-browser",
       "webextension-polyfill",
-      "bootstrap"
+      "bootstrap",
+      "chrome"
     ]
   },
   "include": [

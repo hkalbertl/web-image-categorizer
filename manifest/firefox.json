@@ -1,4 +1,15 @@
 {
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "notifications",
+    "storage"
+  ],
+  "sidebar_action": {
+    "default_title": "WIC Sidebar",
+    "default_panel": "sidebar.html",
+    "open_at_install": false
+  },
   "background": {
     "scripts": [
       "js/background.js"

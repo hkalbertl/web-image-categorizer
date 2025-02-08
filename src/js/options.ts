@@ -1,29 +1,38 @@
 import browser from 'webextension-polyfill';
 import * as bootstrap from 'bootstrap';
 import WIC from './common';
+import { getElement, configBsTheme, setElementsVisibility, setButtonLoading, openSidebar, showSuccessAlert, showErrorAlert, copyValue, triggerEvent } from './common-ui';
 import FILELU from './filelu';
 import { WICTemplate } from './models';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Define variables
-  const editForm = WIC.getElement<HTMLFormElement>('edit-form');
-  const templateModalElement = WIC.getElement<HTMLDivElement>('template-modal');
+  const editForm = getElement<HTMLFormElement>('edit-form');
+  const templateModalElement = getElement<HTMLDivElement>('template-modal');
   const templateModal = new bootstrap.Modal(templateModalElement);
-  const secondaryBackdrop = WIC.getElement<HTMLDivElement>('secondary-modal-backdrop');
-  const urlTestForm = WIC.getElement<HTMLFormElement>('url-test-form');
-  const urlTestModalElement = WIC.getElement<HTMLDivElement>('url-test-modal');
+  const secondaryBackdrop = getElement<HTMLDivElement>('secondary-modal-backdrop');
+  const urlTestForm = getElement<HTMLFormElement>('url-test-form');
+  const urlTestModalElement = getElement<HTMLDivElement>('url-test-modal');
   const urlTestModal = new bootstrap.Modal(urlTestModalElement, {
     backdrop: false // Disable default backdrop for the second modal
   });
-  const paramTestForm = WIC.getElement<HTMLFormElement>('param-test-form');
-  const paramTestModalElement = WIC.getElement<HTMLDivElement>('param-test-modal');
+  const paramTestForm = getElement<HTMLFormElement>('param-test-form');
+  const paramTestModalElement = getElement<HTMLDivElement>('param-test-modal');
   const paramTestModal = new bootstrap.Modal(paramTestModalElement, {
     backdrop: false // Disable default backdrop for the second modal
   });
   const onScreenTemplates: WICTemplate[] = [];
 
+  // Get windowId for chrome
+  let currentWindowId = 0;
+  if (chrome && chrome.sidePanel){
+    chrome.windows.getCurrent().then(window => {
+      currentWindowId = window.id!;
+    });
+  }
+
   // Config dark theme
-  WIC.configBsTheme();
+  configBsTheme();
 
   // Register event listeners
   registerEventListeners();
@@ -36,11 +45,11 @@ document.addEventListener('DOMContentLoaded', async () => {
    */
   function registerEventListeners() {
     // Sidebar mode change event
-    WIC.getElement<HTMLSelectElement>('sidebar-mode').addEventListener('change', evt => {
+    getElement<HTMLSelectElement>('sidebar-mode').addEventListener('change', evt => {
       const caller = evt.target as HTMLSelectElement,
         sidebarMode = parseInt(caller.value);
       // Show / hide notification row
-      WIC.setElementsVisibility('notification-row', !sidebarMode);
+      setElementsVisibility('notification-row', !sidebarMode);
     });
 
     // Add edit form submit event
@@ -50,7 +59,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Set loading
       const submitButton = editForm.querySelector('button[type=submit]') as HTMLButtonElement;
-      WIC.setButtonLoading(submitButton, true);
+      setButtonLoading(submitButton, true);
 
       // Fill the config object
       const config = {
@@ -69,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Open sidebar, if enabled
       if (0 !== config.sidebarMode) {
-        browser.sidebarAction.open();
+        openSidebar(currentWindowId);
       }
 
       // Test API Key
@@ -77,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Save config
         browser.storage.sync.set(config).then(() => {
           // Show success message
-          WIC.showSuccessAlert('Options saved successfully!');
+          showSuccessAlert('Options saved successfully!');
           // Trigger reload config in background
           browser.runtime.sendMessage({ action: 'reload-config' });
           // Open sidebar, if enabled
@@ -88,10 +97,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
       }).catch(ex => {
         // Unknown error?
-        WIC.showErrorAlert(WIC.getErrorMessage(ex));
+        showErrorAlert(WIC.getErrorMessage(ex));
       }).finally(() => {
         // Stop loading
-        WIC.setButtonLoading(submitButton, false);
+        setButtonLoading(submitButton, false);
       });
     });
 
@@ -126,9 +135,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       evt.stopPropagation();
 
       // Reset form elements
-      const urlPatternElem = WIC.getElement<HTMLInputElement>('template-url-pattern'),
-        directoryElem = WIC.getElement<HTMLInputElement>('template-directory'),
-        fileNameElem = WIC.getElement<HTMLInputElement>('template-file-name');
+      const urlPatternElem = getElement<HTMLInputElement>('template-url-pattern'),
+        directoryElem = getElement<HTMLInputElement>('template-directory'),
+        fileNameElem = getElement<HTMLInputElement>('template-file-name');
       [urlPatternElem, directoryElem, fileNameElem].forEach(elem => {
         elem.setCustomValidity('');
         elem.classList.remove('invalid', 'is-valid', 'is-invalid');
@@ -183,15 +192,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Get elements
       const successAlert = urlTestForm.querySelector('.alert-success') as HTMLDivElement,
         errorAlert = urlTestForm.querySelector('.alert-danger') as HTMLDivElement,
-        patternElem = WIC.getElement<HTMLInputElement>('url-test-pattern'),
-        sourceUrlElem = WIC.getElement<HTMLInputElement>('url-test-input');
+        patternElem = getElement<HTMLInputElement>('url-test-pattern'),
+        sourceUrlElem = getElement<HTMLInputElement>('url-test-input');
 
       // Reset form
       [patternElem, sourceUrlElem].forEach(elem => {
         elem.setCustomValidity('');
         elem.classList.remove('invalid', 'is-valid', 'is-invalid');
       });
-      WIC.setElementsVisibility([successAlert, errorAlert], false);
+      setElementsVisibility([successAlert, errorAlert], false);
       urlTestForm.classList.remove('was-validated');
 
       // Perform basic validation
@@ -203,7 +212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         patternElem.value = pattern;
       }
       if (itemError) {
-        WIC.getElement<HTMLDivElement>('url-test-pattern-error').innerText = itemError;
+        getElement<HTMLDivElement>('url-test-pattern-error').innerText = itemError;
         patternElem.setCustomValidity(itemError);
         isValid = false;
       }
@@ -218,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         sourceUrlElem.value = sourceUrl;
       }
       if (itemError) {
-        WIC.getElement<HTMLDivElement>('url-test-input-error').innerText = itemError;
+        getElement<HTMLDivElement>('url-test-input-error').innerText = itemError;
         sourceUrlElem.setCustomValidity(itemError);
         isValid = false;
       }
@@ -228,11 +237,11 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (isValid) {
         // Check URL is matched
         if (WIC.isUrlMatch(sourceUrl, pattern)) {
-          WIC.setElementsVisibility(successAlert, true);
-          WIC.setElementsVisibility(errorAlert, false);
+          setElementsVisibility(successAlert, true);
+          setElementsVisibility(errorAlert, false);
         } else {
-          WIC.setElementsVisibility(successAlert, false);
-          WIC.setElementsVisibility(errorAlert, true);
+          setElementsVisibility(successAlert, false);
+          setElementsVisibility(errorAlert, true);
         }
       }
 
@@ -240,7 +249,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, false);
 
     // Template modal related
-    WIC.getElement<HTMLButtonElement>('template-add-button').addEventListener('click', () => {
+    getElement<HTMLButtonElement>('template-add-button').addEventListener('click', () => {
       showTemplateEditModal(-1);
     });
     templateModalElement.addEventListener('show.bs.modal', () => {
@@ -254,7 +263,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     // URL test modal related
-    WIC.getElement<HTMLButtonElement>('template-url-pattern-test-button').addEventListener('click', () => {
+    getElement<HTMLButtonElement>('template-url-pattern-test-button').addEventListener('click', () => {
       showTemplateUrlTesterModal();
     });
     urlTestModalElement.addEventListener('show.bs.modal', () => {
@@ -263,9 +272,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Reset form
       urlTestForm.classList.remove('was-validated');
       urlTestForm.querySelectorAll('input').forEach(element => element.value = '');
-      WIC.copyValue('template-url-pattern', 'url-test-pattern');
+      copyValue('template-url-pattern', 'url-test-pattern');
       // Hide alerts
-      WIC.setElementsVisibility([...urlTestForm.querySelectorAll('.alert')], false);
+      setElementsVisibility([...urlTestForm.querySelectorAll('.alert')], false);
     });
     urlTestModalElement.addEventListener('hide.bs.modal', () => {
       // Hide backdrop
@@ -273,21 +282,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     urlTestModalElement.querySelector('.modal-footer .btn-outline-primary')!.addEventListener('click', () => {
       // Send current pattern back to template edit modal
-      WIC.copyValue('url-test-pattern', 'template-url-pattern');
+      copyValue('url-test-pattern', 'template-url-pattern');
       // Close modal
       urlTestModal.hide();
     });
 
     // Param test modal related
-    WIC.getElement<HTMLButtonElement>('template-directory-test-button').addEventListener('click', () => {
+    getElement<HTMLButtonElement>('template-directory-test-button').addEventListener('click', () => {
       paramTestModal.show();
       paramTestForm.dataset.mode = 'dir';
-      WIC.copyValue('template-directory', 'param-test-pattern');
+      copyValue('template-directory', 'param-test-pattern');
     });
-    WIC.getElement<HTMLButtonElement>('template-file-name-test-button').addEventListener('click', () => {
+    getElement<HTMLButtonElement>('template-file-name-test-button').addEventListener('click', () => {
       paramTestModal.show();
       paramTestForm.dataset.mode = 'file';
-      WIC.copyValue('template-file-name', 'param-test-pattern');
+      copyValue('template-file-name', 'param-test-pattern');
     });
     paramTestModalElement.addEventListener('show.bs.modal', () => {
       // Show backdrop
@@ -296,10 +305,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       paramTestForm.classList.remove('was-validated');
       paramTestForm.querySelectorAll('input').forEach(element => element.value = '');
       // Hide alerts
-      WIC.setElementsVisibility([...paramTestForm.querySelectorAll('.alert')], false);
+      setElementsVisibility([...paramTestForm.querySelectorAll('.alert')], false);
     });
     paramTestModalElement.addEventListener('shown.bs.modal', () => {
-      WIC.getElement<HTMLInputElement>('param-test-pattern').focus();
+      getElement<HTMLInputElement>('param-test-pattern').focus();
     });
     paramTestModalElement.addEventListener('hide.bs.modal', () => {
       // Hide backdrop
@@ -308,7 +317,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     paramTestModalElement.querySelector('button.btn-outline-primary')!.addEventListener('click', () => {
       // Copy pattern back to previous screen
       let targetId = 'dir' === paramTestForm.dataset.mode ? 'template-directory' : 'template-file-name';
-      WIC.copyValue('param-test-pattern', targetId);
+      copyValue('param-test-pattern', targetId);
       // Close modal
       paramTestModal.hide();
     });
@@ -320,13 +329,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       // Reset form elements
       const successAlert = paramTestForm.querySelector('.alert-success') as HTMLDivElement,
         errorAlert = paramTestForm.querySelector('.alert-danger') as HTMLDivElement,
-        patternElem = WIC.getElement<HTMLInputElement>('param-test-pattern'),
-        sourceUrlElem = WIC.getElement<HTMLInputElement>('param-test-url');
+        patternElem = getElement<HTMLInputElement>('param-test-pattern'),
+        sourceUrlElem = getElement<HTMLInputElement>('param-test-url');
       [patternElem, sourceUrlElem].forEach(elem => {
         elem.setCustomValidity('');
         elem.classList.remove('invalid', 'is-valid', 'is-invalid');
       });
-      WIC.setElementsVisibility([successAlert, errorAlert], false);
+      setElementsVisibility([successAlert, errorAlert], false);
       paramTestForm.classList.remove('was-validated');
 
       // Perform basic validation
@@ -339,7 +348,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         itemError = validateTemplateInput(pattern, isDirMode);
       }
       if (itemError) {
-        WIC.getElement<HTMLDivElement>('param-test-pattern-error').innerText = itemError;
+        getElement<HTMLDivElement>('param-test-pattern-error').innerText = itemError;
         patternElem.setCustomValidity(itemError);
         isValid = false;
       } else {
@@ -356,7 +365,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         sourceUrlElem.value = sourceUrl;
       }
       if (itemError) {
-        WIC.getElement<HTMLDivElement>('param-test-url-error').innerText = itemError;
+        getElement<HTMLDivElement>('param-test-url-error').innerText = itemError;
         sourceUrlElem.setCustomValidity(itemError);
         isValid = false;
       }
@@ -374,7 +383,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (matching && matching.isMatched) {
             // Data matched
             successAlert.querySelector('span')!.innerText = isDirMode ? matching.directory : matching.fileName;
-            WIC.setElementsVisibility(successAlert, true);
+            setElementsVisibility(successAlert, true);
           } else {
             // Failed to match or required parameter does not exist
             itemError = 'Failed to match, please double check parameters defined in pattern.';
@@ -385,7 +394,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (itemError) {
           // Show error alert
           errorAlert.querySelector('span')!.innerText = itemError;
-          WIC.setElementsVisibility(errorAlert, true);
+          setElementsVisibility(errorAlert, true);
         }
       }
       paramTestForm.classList.add('was-validated');
@@ -416,7 +425,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     editForm.elements['image-format'].value = config.imageFormat;
 
     // Trigger change
-    WIC.triggerEvent('sidebar-mode', 'change');
+    triggerEvent('sidebar-mode', 'change');
   }
 
   /**
@@ -520,9 +529,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Fill template values, if available
     if (-1 !== rowIndex) {
       const record = onScreenTemplates[rowIndex];
-      WIC.getElement<HTMLInputElement>('template-url-pattern').value = record.url || '';
-      WIC.getElement<HTMLInputElement>('template-directory').value = record.directory || '';
-      WIC.getElement<HTMLInputElement>('template-file-name').value = record.fileName || '';
+      getElement<HTMLInputElement>('template-url-pattern').value = record.url || '';
+      getElement<HTMLInputElement>('template-directory').value = record.directory || '';
+      getElement<HTMLInputElement>('template-file-name').value = record.fileName || '';
     }
     // Save editing row
     templateModalElement.dataset.row = rowIndex.toString();

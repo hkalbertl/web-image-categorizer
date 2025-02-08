@@ -1,20 +1,21 @@
 import browser from 'webextension-polyfill';
 import * as bootstrap from 'bootstrap';
 import WIC from './common'
+import { getElement, configBsTheme, setElementsVisibility, setButtonLoading, showErrorAlert } from './common-ui';
 import FILELU from './filelu';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Define global variables
   let activeImageBlob: Blob | null = null;
-  const editForm = WIC.getElement<HTMLFormElement>('edit-form');
-  const editDirectory = WIC.getElement<HTMLInputElement>('cloud-directory');
-  const editFileName = WIC.getElement<HTMLInputElement>('cloud-file-name');
-  const editFileInfo = WIC.getElement<HTMLInputElement>('cloud-file-info');
-  const imagePreview = WIC.getElement<HTMLImageElement>('cloud-image');
+  const editForm = getElement<HTMLFormElement>('edit-form');
+  const editDirectory = getElement<HTMLInputElement>('cloud-directory');
+  const editFileName = getElement<HTMLInputElement>('cloud-file-name');
+  const editFileInfo = getElement<HTMLInputElement>('cloud-file-info');
+  const imagePreview = getElement<HTMLImageElement>('cloud-image');
   const dirPickerModal = new bootstrap.Modal('#dir-picker-modal');
 
   // Config dark theme
-  WIC.configBsTheme();
+  configBsTheme();
 
   // Check config
   const config = await WIC.loadConfig();
@@ -24,10 +25,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     titleSpan.classList.remove('d-none');
     titleSpan.innerText = config.provider.type;
     // API Key found, show tips
-    WIC.setElementsVisibility('tips-save', true);
+    setElementsVisibility('tips-save', true);
   } else {
     // Ask to config options
-    WIC.setElementsVisibility('tips-setup', true);
+    setElementsVisibility('tips-setup', true);
   }
 
   // Register event listener
@@ -37,9 +38,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       self.location.reload();
     } else if ('prepare-image' === message.action) {
       // Hide elements
-      WIC.setElementsVisibility(['tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm, 'common-error'], false);
+      setElementsVisibility(['tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm, 'common-error'], false);
       // Show loading
-      WIC.setElementsVisibility('retrieving-image', true);
+      setElementsVisibility('retrieving-image', true);
       // Reset image data
       imagePreview.src = '';
       activeImageBlob = null;
@@ -49,9 +50,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         message.directory, message.fileName);
     } else if ('show-error' === message.action) {
       // Problem occurred in background script, hide elements
-      WIC.setElementsVisibility(['retrieving-image', 'tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm], false);
+      setElementsVisibility(['retrieving-image', 'tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm], false);
       // Show error
-      WIC.showErrorAlert(message.error);
+      showErrorAlert(message.error);
     }
     // Return true to indicate the response is asynchronous (optional)
     return true;
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Disable form
     const submitButton = editForm.querySelector('button[type=submit]') as HTMLButtonElement;
-    WIC.setButtonLoading(submitButton, true);
+    setButtonLoading(submitButton, true);
 
     // Get file name / folder name
     const directory = editDirectory.value || '';
@@ -76,45 +77,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } catch (ex) {
       const message = WIC.getErrorMessage(ex);
-      WIC.showErrorAlert(message);
+      showErrorAlert(message);
     } finally {
-      WIC.setButtonLoading(submitButton, false);
+      setButtonLoading(submitButton, false);
     }
 
     // Show success message
     if (fileCode) {
-      WIC.setElementsVisibility(editForm, false);
+      setElementsVisibility(editForm, false);
 
       const successAlert = document.getElementById('upload-success-alert') as HTMLDivElement;
       successAlert.classList.remove('d-none');
       successAlert.querySelector('a')!.href = 'https://filelu.com/' + fileCode;
     }
   });
-  WIC.getElement<HTMLButtonElement>('cloud-directory-picker').addEventListener('click', () => {
+  getElement<HTMLButtonElement>('cloud-directory-picker').addEventListener('click', () => {
     dirPickerModal.show();
   });
-  WIC.getElement<HTMLDivElement>('dir-picker-modal').addEventListener('show.bs.modal', () => {
+  getElement<HTMLDivElement>('dir-picker-modal').addEventListener('show.bs.modal', () => {
     // Load the root folder
     loadFolderList(0);
   });
-  WIC.getElement<HTMLFormElement>('dir-picker-form').addEventListener('submit', evt => {
+  getElement<HTMLFormElement>('dir-picker-form').addEventListener('submit', evt => {
     evt.preventDefault();
     // Get selected directory
     const pickForm = evt.target as HTMLFormElement;
     const rawFolderId = pickForm.elements['dir-picker-folder'].value as string;
-    const folderPath = WIC.getElement<HTMLInputElement>('dir-picker-folder-' + rawFolderId).dataset.path;
+    const folderPath = getElement<HTMLInputElement>('dir-picker-folder-' + rawFolderId).dataset.path;
     editDirectory.value = folderPath || '/';
     dirPickerModal.hide();
   });
 
   /**
    * Load image and show edit form.
-   * @param {ArrayBuffer} blobArray The image blob data.
-   * @param {string} blobType The content type of blob, such as "image/png".
-   * @param {string} dimension Optional. The dimension of image.
-   * @param {string} displaySize
-   * @param {string} targetDirectory
-   * @param {string} targetFileName
+   * @param blobArray The image blob data.
+   * @param blobType The content type of blob, such as "image/png".
+   * @param dimension Optional. The dimension of image.
+   * @param displaySize
+   * @param targetDirectory
+   * @param targetFileName
    */
   async function fillImageData(blobArray: ArrayBuffer, blobType: string, dimension: string, displaySize: string, targetDirectory: string, targetFileName: string) {
     // Check API key defined
@@ -131,13 +132,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         imagePreview.src = URL.createObjectURL(activeImageBlob);
       } else {
         // Unknown format
-        WIC.showErrorAlert('Failed to retrieve image...');
+        showErrorAlert('Failed to retrieve image...');
       }
     } catch (ex) {
-      WIC.showErrorAlert(`Failed to retrieve image: ${ex}`);
+      showErrorAlert(`Failed to retrieve image: ${ex}`);
     } finally {
       // Hide loading
-      WIC.setElementsVisibility(['tips-save', 'retrieving-image'], false);
+      setElementsVisibility(['tips-save', 'retrieving-image'], false);
     }
 
     // When image loaded
@@ -162,12 +163,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       editFileInfo.value = fileInfo;
 
       // Show edit panel and form
-      WIC.setElementsVisibility(['edit-panel', editForm], true);
+      setElementsVisibility(['edit-panel', editForm], true);
     }
   }
 
   async function loadFolderList(folderId: number) {
-    const treeView = WIC.getElement<HTMLDivElement>('dir-picker-view');
+    const treeView = getElement<HTMLDivElement>('dir-picker-view');
     let directoryPath = '';
     if (!folderId) {
       // Clear all content
@@ -178,10 +179,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Select radio selected
-    const currentFolderRadio = WIC.getElement<HTMLInputElement>('dir-picker-folder-' + folderId);
+    const currentFolderRadio = getElement<HTMLInputElement>('dir-picker-folder-' + folderId);
     currentFolderRadio.checked = true;
     directoryPath = currentFolderRadio.dataset.path || '';
-    const subContainer = WIC.getElement<HTMLDivElement>('dir-picker-container-' + folderId);
+    const subContainer = getElement<HTMLDivElement>('dir-picker-container-' + folderId);
 
     // Replace sub folder content with spinner
     subContainer.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div>';
@@ -202,7 +203,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } catch (ex) {
       // Failed to get folder list
-      WIC.showErrorAlert(WIC.getErrorMessage(ex));
+      showErrorAlert(WIC.getErrorMessage(ex));
     }
   }
 

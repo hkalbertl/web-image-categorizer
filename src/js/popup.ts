@@ -1,9 +1,9 @@
 import browser from 'webextension-polyfill';
-import WIC from './common';
+import { configBsTheme } from './common-ui';
 
 document.addEventListener('DOMContentLoaded', () => {
   // Config dark theme
-  WIC.configBsTheme();
+  configBsTheme();
 
   // Register event listeners
   document.querySelector('button')!.addEventListener('click', () => {

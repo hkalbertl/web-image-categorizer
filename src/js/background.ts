@@ -1,23 +1,26 @@
 import browser from 'webextension-polyfill';
 import WIC from './common';
+import { openSidebar } from './common-ui';
 import FILELU from './filelu';
 import { WICConfig, WICImageData } from './models';
 
 (function () {
+  // Global variables
   const openSidebarDelay = 200;
 
-  // Save a copy of the config to be used for determinating sidebar mode
-  let preloadedConfig: WICConfig;
+  // Background script cannot use `await` directly, using `Promise.then` to load config
   WIC.loadConfig().then(config => {
-    // Background script cannot use `await` directly, using `Promise.then` to load config
-    preloadedConfig = config;
+    // Save a copy of the config to localStorage to be used for determinating sidebar mode
+    // As localStorage is not async, it is suitable here for non-async calls
+    localStorage.setItem('config', JSON.stringify(config));
   });
 
   // Register message listener
   browser.runtime.onMessage.addListener(async (message: any) => {
     if ('reload-config' === message.action) {
-      // Reload config when options saved at option page
-      preloadedConfig = await WIC.loadConfig();
+      // Reload config when options updated
+      const config = await WIC.loadConfig();
+      localStorage.setItem('config', JSON.stringify(config));
       console.debug('Background config reloaded!');
     }
   });
@@ -33,19 +36,27 @@ import { WICConfig, WICImageData } from './models';
   });
 
   // Handle the click event on the context menu
-  // ** Event handler must not be `async` if `sidebarAction.open()` is used **
+  // ** Event handler must not be `async` if sidebar is used **
   browser.contextMenus.onClicked.addListener((info, tab) => {
     // Check menu ID
     if ('wic-save-image' === info.menuItemId && info.srcUrl) {
+      // Load config from localStorage
+      const rawConfig = localStorage.getItem('config');
+      if (!rawConfig) {
+        console.warn('No config in local storage...');
+        return;
+      }
+      const config = JSON.parse(rawConfig) as WICConfig;
+
       // Check provider defined
-      if (!preloadedConfig.provider) {
+      if (!config || !config.provider) {
         // Open options page
         browser.runtime.openOptionsPage();
       } else {
         // Open sidebar, if enabled
-        if (0 !== preloadedConfig.sidebarMode) {
+        if (0 !== config.sidebarMode) {
           console.debug('Opening sidebar...');
-          browser.sidebarAction.open().then(() => {
+          openSidebar(tab!.windowId!).then(() => {
             // Add a small delay to allow sidebar to load
             WIC.sleep(openSidebarDelay).then(() => {
               // Set retrieving image
@@ -235,7 +246,7 @@ import { WICConfig, WICImageData } from './models';
 
         // Convert the download data as data URL
         const blob = await resp.blob();
-        const objectUrl = URL.createObjectURL(blob);
+        const objectUrl = URL.createObjectURL(blob); // Does not work on chrome :(
         result.blobArray = await blob.arrayBuffer();
         result.blobType = blob.type || contentType;
 
@@ -331,8 +342,10 @@ import { WICConfig, WICImageData } from './models';
       // Create new image and config load event
       const img = new Image();
       img.onload = () => {
-        // Image download successfully, get dimension
-        result.dimension = `${img.naturalWidth}x${img.naturalHeight}`;
+        // Image downloaded, get dimension
+        if (img.naturalWidth && img.naturalHeight) {
+          result.dimension = `${img.naturalWidth}x${img.naturalHeight}`;
+        }
         // All done, return result
         resolve(result);
       };

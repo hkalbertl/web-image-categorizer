@@ -10,17 +10,6 @@
   "action": {
     "default_popup": "popup.html"
   },
-  "sidebar_action": {
-    "default_title": "WIC Sidebar",
-    "default_panel": "sidebar.html",
-    "open_at_install": false
-  },
-  "permissions": [
-    "activeTab",
-    "contextMenus",
-    "notifications",
-    "storage"
-  ],
   "host_permissions": [
     "*://*/*"
   ],

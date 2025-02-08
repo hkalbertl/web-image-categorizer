@@ -4,11 +4,11 @@ import archiver from 'archiver';
 // Read the package.json file
 const packageJson = JSON.parse(readFileSync('./package.json', 'utf8'));
 
-const output = createWriteStream(`./dist/${packageJson.name || 'output'}.xpi`);
+const output = createWriteStream(`./dist/${packageJson.name || 'output'}.zip`);
 const archive = archiver('zip', { zlib: { level: 9 } });
 
 output.on('close', () => {
-  console.log(`## Firefox add-on .xpi created: ${archive.pointer()} total bytes`);
+  console.log(`## Browser package created: ${archive.pointer()} total bytes`);
 });
 
 archive.on('error', (err) => {
