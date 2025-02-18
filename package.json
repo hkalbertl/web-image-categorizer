@@ -7,10 +7,10 @@
     "debug": "web-ext run -s build",
     "firefox": "node utils/merge-manifest.js 'firefox' && webpack",
     "chrome": "node utils/merge-manifest.js 'chrome' && webpack",
-    "build-firefox": "npm run build && node utils/package-up.js",
+    "build-firefox": "npm run firefox && node utils/package-up.js",
     "build-chrome": "npm run chrome && node utils/package-up.js"
   },
-  "author": "Albert L",
+  "author": "Albert L <hkalbertl@users.noreply.github.com>",
   "license": "MIT",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",

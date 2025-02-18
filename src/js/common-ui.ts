@@ -146,7 +146,7 @@ export async function openSidebar(windowId: number) {
         console.error('Failed to open sidebar...', err);
         resolve();
       });
-    } else if (chrome && chrome.sidePanel) {
+    } else if (chrome && chrome.sidePanel && 'function' === typeof chrome.sidePanel.open) {
       // Chrome: Use sidePanel API
       chrome.sidePanel.open({ windowId }, () => {
         resolve();
