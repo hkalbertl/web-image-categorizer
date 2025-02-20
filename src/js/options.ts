@@ -3,7 +3,7 @@ import * as bootstrap from 'bootstrap';
 import WIC from './common';
 import { getElement, configBsTheme, setElementsVisibility, setButtonLoading, openSidebar, showSuccessAlert, showErrorAlert, copyValue, triggerEvent } from './common-ui';
 import FILELU from './filelu';
-import { WICTemplate } from './models';
+import { WICConfig, WICTemplate } from './models';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Define variables
@@ -25,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Get windowId for chrome
   let currentWindowId = 0;
-  if (chrome && chrome.sidePanel){
+  if (chrome && chrome.sidePanel) {
     chrome.windows.getCurrent().then(window => {
       currentWindowId = window.id!;
     });
@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             type: 'FileLu',
             apiKey: editForm.elements['filelu-api-key'].value
           },
+          wcipherPassword: editForm.elements['wcipher-password'].value || '',
           templates: onScreenTemplates,
           sidebarMode: parseInt(editForm.elements['sidebar-mode'].value),
           notificationLevel: parseInt(editForm.elements['notification-level'].value),
@@ -147,7 +148,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       const record: WICTemplate = {
         url: urlPatternElem.value.trim(),
         directory: directoryElem.value.trim(),
-        fileName: fileNameElem.value.trim()
+        fileName: fileNameElem.value.trim(),
+        encryption: getElement<HTMLInputElement>('template-use-encryption').checked
       };
       let isValid = urlPatternElem.checkValidity();
 
@@ -373,7 +375,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (isValid) {
         itemError = null;
         try {
-          const matchTemplate: WICTemplate = { url: '*' };
+          const matchTemplate: WICTemplate = { url: '*', encryption: false };
           if (isDirMode) {
             matchTemplate.directory = pattern;
           } else {
@@ -415,6 +417,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         editForm.elements['filelu-api-key'].value = config.provider.apiKey;
       }
     }
+
+    // Privacy
+    editForm.elements['wcipher-password'].value = config.wcipherPassword;
 
     // Bulid template table
     buildTemplateTable(config.templates);
@@ -532,6 +537,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       getElement<HTMLInputElement>('template-url-pattern').value = record.url || '';
       getElement<HTMLInputElement>('template-directory').value = record.directory || '';
       getElement<HTMLInputElement>('template-file-name').value = record.fileName || '';
+      getElement<HTMLInputElement>('template-use-encryption').checked = record.encryption;
     }
     // Save editing row
     templateModalElement.dataset.row = rowIndex.toString();
