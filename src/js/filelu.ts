@@ -147,7 +147,7 @@ const FILELU = {
    * @param fileBlob The file content in blob format.
    * @returns The FileLu file code.
    */
-  uploadFileToDirectory: async function (apiKey: any, directory: string, fileName: string, fileBlob: Blob): Promise<string> {
+  uploadFileToDirectory: async function (apiKey: string, directory: string, fileName: string, fileBlob: Blob): Promise<string> {
     // Upload to FileLu, get target directory
     let level = 0, folderId = 0, parentId = folderId, isCreateMode = false;
     const segments = directory.substring(1).split('/');
@@ -159,7 +159,8 @@ const FILELU = {
         // Get folder list at current level
         const subFolderList = await FILELU.getFolderList(apiKey, parentId);
         if (subFolderList && subFolderList.length) {
-          const targetFolder = subFolderList.find(item => item.name === segment);
+          const lowerCaseSegment = segment.toLowerCase();
+          const targetFolder = subFolderList.find(item => item.name.toLowerCase() === lowerCaseSegment);
           if (targetFolder) {
             // Target found
             parentId = targetFolder.fld_id;

@@ -36,7 +36,7 @@ export function showErrorAlert(msg: string) {
  * @param isLoading Is loading or not.
  */
 export function setButtonLoading(targetButton: HTMLButtonElement, isLoading: boolean): void {
-  const buttonIcon = targetButton.querySelector('i.fa-solid')!,
+  const buttonIcon = targetButton.querySelector('i.bi')!,
     buttonSpinner = targetButton.querySelector('span.spinner-border')!;
   if (isLoading) {
     targetButton.disabled = true;

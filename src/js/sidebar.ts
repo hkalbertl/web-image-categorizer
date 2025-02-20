@@ -64,20 +64,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     evt.preventDefault();
 
     // Disable form
+    const useEncryption = config.wcipherPassword && editFileEncryption.checked;
     const submitButton = editForm.querySelector('button[type=submit]') as HTMLButtonElement;
     setButtonLoading(submitButton, true);
 
     // Get file name / folder name
     const directory = editDirectory.value || '';
     let fileName = editFileName.value || '';
-
     let fileCode: string | null = null;
     try {
       const config = await WIC.loadConfig(), apiKey = config.provider?.apiKey;
       if (apiKey && activeImageBlob) {
         // Encrypt content when needed
         let uploadBlob: Blob;
-        if (config.wcipherPassword && editFileEncryption.checked) {
+        if (useEncryption) {
           // Use WCipher for encryption
           const imageBytes = await activeImageBlob.arrayBuffer();
           const encryptedBytes = await WCipher.encrypt(config.wcipherPassword, new Uint8Array(imageBytes));
@@ -99,11 +99,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Show success message
     if (fileCode) {
+      // Hide edit form
       setElementsVisibility(editForm, false);
 
-      const successAlert = document.getElementById('upload-success-alert') as HTMLDivElement;
+      // Show success alert
+      const successAlert = getElement<HTMLDivElement>('upload-success-alert');
       successAlert.classList.remove('d-none');
-      successAlert.querySelector('a')!.href = 'https://filelu.com/' + fileCode;
+
+      // Config preview link
+      const successLink = successAlert.querySelector('a');
+      if (successLink) {
+        if (!useEncryption) {
+          // Set preview link when encryption is not used.
+          successLink.href = 'https://filelu.com/' + fileCode;
+        }
+        setElementsVisibility(successLink, !useEncryption);
+      }
     }
   });
   getElement<HTMLButtonElement>('cloud-directory-picker').addEventListener('click', () => {
@@ -275,9 +286,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     refreshLink.id = 'dir-picker-refresh-' + folderId;
     refreshLink.href = '#';
     refreshLink.classList.add('ms-1');
-    refreshLink.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i>';
     container.appendChild(refreshLink);
     refreshLink.addEventListener('click', refreshSubFolder);
+
+    const refreshIcon = document.createElement('i');
+    refreshIcon.classList.add('bi bi-arrow-repeat');
+    refreshLink.appendChild(refreshIcon);
 
     // Add sub-container
     const subContainer = document.createElement('div');

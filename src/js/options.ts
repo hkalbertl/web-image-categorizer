@@ -461,7 +461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         secondTd.classList.add('text-end');
         tr.appendChild(secondTd);
         // Add `edit` button
-        const editButton = createIconButton('btn-primary', 'fa-edit', index.toString());
+        const editButton = createIconButton('btn-primary', 'bi-pencil', index.toString());
         secondTd.appendChild(editButton);
         editButton.addEventListener('click', evt => {
           const rawRowIndex = (evt.currentTarget as HTMLButtonElement).value,
@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           showTemplateEditModal(rowIndex);
         });
         // Add `delete` button
-        const deleteButton = createIconButton('btn-danger', 'fa-trash', index.toString());
+        const deleteButton = createIconButton('btn-danger', 'bi-trash', index.toString());
         secondTd.appendChild(deleteButton);
         // Push to global list
         onScreenTemplates.push(item);
@@ -550,17 +550,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   /**
    * Create Bootstrap button with a font-awesome icon.
    * @param buttonClass
-   * @param faIcon
+   * @param biIcon
    * @param value
    * @returns The generated button element.
    */
-  function createIconButton(buttonClass: string, faIcon: string, value: string): HTMLButtonElement {
+  function createIconButton(buttonClass: string, biIcon: string, value: string): HTMLButtonElement {
     const button = document.createElement('button') as HTMLButtonElement;
     button.type = 'button';
     button.classList.add('btn', 'btn-sm', buttonClass);
     button.value = value;
     const icon = document.createElement('i');
-    icon.classList.add('fa-solid', faIcon);
+    icon.classList.add('bi', biIcon);
     button.appendChild(icon);
     return button;
   }
