@@ -165,6 +165,7 @@ const WIC = {
           if (template.fileName) {
             result.fileName = `${replaceFunc(template.fileName)}.${extName}`;
           }
+          result.useEncryption = template.encryption;
           result.isMatched = true;
           break;
         }

@@ -86,6 +86,21 @@
     </div>
     <div class="row mb-3">
       <div class="col-sm-2 col-md-3">
+        Privacy
+      </div>
+      <div class="col-sm-10 col-md-9">
+        <div class="mb-3">
+          <label for="wcipher-password" class="form-label">Encryption Password</label>
+          <input type="password" class="form-control" id="wcipher-password" name="wcipher-password" />
+          <div class="form-text">
+            Client side encryption password by using <a href="https://github.com/hkalbertl/wcipher"
+              target="_blank">WCipher</a>.
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row mb-3">
+      <div class="col-sm-2 col-md-3">
         Naming Templates
       </div>
       <div class="col-sm-10 col-md-9">
@@ -248,6 +263,12 @@
                     href="https://github.com/hkalbertl/web-image-categorizer/wiki/Documentation#wic-fallback-location"
                     target="_blank">fallback file name</a>.
                 </div>
+              </div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="template-use-encryption" value="1" />
+                <label class="form-check-label" for="template-use-encryption">
+                  Use client-side encryption when available
+                </label>
               </div>
             </div>
           </form>

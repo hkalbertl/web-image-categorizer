@@ -3,6 +3,7 @@ import WIC from './common';
 import { openSidebar } from './common-ui';
 import FILELU from './filelu';
 import { WICConfig, WICImageData } from './models';
+import WCipher from 'wcipher';
 
 (function () {
   // Global variables
@@ -160,14 +161,27 @@ import { WICConfig, WICImageData } from './models';
           displaySize: displaySize,
           srcFileName: imageData.fileName,
           directory: nameData.directory,
-          fileName: nameData.fileName
+          fileName: nameData.fileName,
+          useEncryption: nameData.useEncryption,
         });
       } else {
         // Upload to storage provider
         if ('FileLu' === config.provider.type && config.provider.apiKey) {
-          // Upload to FileLu, get target directory
-          console.debug(`Saving image to ${nameData.directory}/${nameData.fileName}`);
-          await FILELU.uploadFileToDirectory(config.provider.apiKey, nameData.directory, nameData.fileName, imageBlob);
+          // Prepare file upload variables
+          let fileName = nameData.fileName;
+          let uploadBlob = imageBlob;
+          // Use encryption if required
+          if (config.wcipherPassword && nameData.useEncryption) {
+            // Use WCipher for encryption
+            const imageBytes = await imageBlob.arrayBuffer();
+            const encryptedBytes = await WCipher.encrypt(config.wcipherPassword, new Uint8Array(imageBytes));
+            uploadBlob = new Blob([encryptedBytes], { type: 'application/octet-stream' });
+            // Append file extension
+            fileName += '.enc';
+          }
+          // Upload to FileLu
+          console.debug(`Saving image to ${nameData.directory}/${fileName}`);
+          await FILELU.uploadFileToDirectory(config.provider.apiKey, nameData.directory, fileName, uploadBlob);
         } else {
           // Unknown provider
           throw 'Unknown provider: ' + config.provider.type;

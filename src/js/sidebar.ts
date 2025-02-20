@@ -3,6 +3,7 @@ import * as bootstrap from 'bootstrap';
 import WIC from './common'
 import { getElement, configBsTheme, setElementsVisibility, setButtonLoading, showErrorAlert } from './common-ui';
 import FILELU from './filelu';
+import WCipher from 'wcipher';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Define global variables
@@ -11,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const editDirectory = getElement<HTMLInputElement>('cloud-directory');
   const editFileName = getElement<HTMLInputElement>('cloud-file-name');
   const editFileInfo = getElement<HTMLInputElement>('cloud-file-info');
+  const editFileEncryption = getElement<HTMLInputElement>('cloud-file-encryption');
   const imagePreview = getElement<HTMLImageElement>('cloud-image');
   const dirPickerModal = new bootstrap.Modal('#dir-picker-modal');
 
@@ -47,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if ('fill-image' === message.action) {
       // Image sent from background / content
       await fillImageData(message.blobArray, message.blobType, message.dimension, message.displaySize,
-        message.directory, message.fileName);
+        message.directory, message.fileName, message.useEncryption);
     } else if ('show-error' === message.action) {
       // Problem occurred in background script, hide elements
       setElementsVisibility(['retrieving-image', 'tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm], false);
@@ -67,13 +69,26 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Get file name / folder name
     const directory = editDirectory.value || '';
-    const fileName = editFileName.value || '';
+    let fileName = editFileName.value || '';
 
     let fileCode: string | null = null;
     try {
       const config = await WIC.loadConfig(), apiKey = config.provider?.apiKey;
       if (apiKey && activeImageBlob) {
-        fileCode = await FILELU.uploadFileToDirectory(apiKey, directory, fileName, activeImageBlob);
+        // Encrypt content when needed
+        let uploadBlob: Blob;
+        if (config.wcipherPassword && editFileEncryption.checked) {
+          // Use WCipher for encryption
+          const imageBytes = await activeImageBlob.arrayBuffer();
+          const encryptedBytes = await WCipher.encrypt(config.wcipherPassword, new Uint8Array(imageBytes));
+          uploadBlob = new Blob([encryptedBytes], { type: 'application/octet-stream' });
+          // Append file extension
+          fileName += '.enc';
+        } else {
+          // No encryption, use the image blob directly
+          uploadBlob = activeImageBlob;
+        }
+        fileCode = await FILELU.uploadFileToDirectory(apiKey, directory, fileName, uploadBlob);
       }
     } catch (ex) {
       const message = WIC.getErrorMessage(ex);
@@ -116,8 +131,9 @@ document.addEventListener('DOMContentLoaded', async () => {
    * @param displaySize
    * @param targetDirectory
    * @param targetFileName
+   * @param useEncryption
    */
-  async function fillImageData(blobArray: ArrayBuffer, blobType: string, dimension: string, displaySize: string, targetDirectory: string, targetFileName: string) {
+  async function fillImageData(blobArray: ArrayBuffer, blobType: string, dimension: string, displaySize: string, targetDirectory: string, targetFileName: string, useEncryption: boolean) {
     // Check API key defined
     const config = await WIC.loadConfig();
     if (!config || !config.provider) {
@@ -161,6 +177,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         fileInfo = 'N/A';
       }
       editFileInfo.value = fileInfo;
+
+      // Config encryption
+      if (config.wcipherPassword) {
+        editFileEncryption.disabled = false;
+        editFileEncryption.checked = useEncryption;
+      } else {
+        // Encryption not available
+        editFileEncryption.disabled = true;
+        editFileEncryption.checked = false;
+      }
 
       // Show edit panel and form
       setElementsVisibility(['edit-panel', editForm], true);
