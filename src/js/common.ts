@@ -163,8 +163,9 @@ const WIC = {
             result.directory = replaceFunc(template.directory);
           }
           if (template.fileName) {
-            result.fileName = `${replaceFunc(template.fileName)}.${extName}`;
+            result.fileName = replaceFunc(template.fileName);
           }
+          result.extension = `.${extName}`;
           result.useEncryption = template.encryption;
           result.isMatched = true;
           break;
@@ -176,7 +177,8 @@ const WIC = {
       result.directory = `/WebImageCategorizer/${refUrl.host}`;
     }
     if (!result.fileName) {
-      result.fileName = `${now.format(WIC.NOW_FORMAT)}.${extName}`;
+      result.fileName = now.format(WIC.NOW_FORMAT);
+      result.extension = `.${extName}`;
     }
     return result;
   },

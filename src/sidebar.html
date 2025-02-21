@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Web Image Categorizer</title>
-  <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="lib/bootstrap/bootstrap.min.css" />
   <link rel="stylesheet" href="lib/bootstrap-icons/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/sidebar.css" />
 </head>
@@ -56,8 +56,12 @@
         </div>
         <div class="mb-3">
           <label for="cloud-file-name" class="form-label">File Name</label>
-          <input type="text" class="form-control" id="cloud-file-name" name="cloud-file-name" maxlength="200"
-            required="required" />
+          <div class="input-group">
+            <input type="text" class="form-control" id="cloud-file-name" name="cloud-file-name" maxlength="200"
+              required="required" />
+            <span class="input-group-text" id="cloud-file-ext-display"></span>
+          </div>
+          <input type="hidden" id="cloud-file-ext" name="cloud-file-ext" />
         </div>
         <div class="mb-3">
           <label for="cloud-file-info" class="form-label">
@@ -117,7 +121,7 @@
       </div>
     </div>
   </div>
-  <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+  <script src="lib/bootstrap/bootstrap.min.js"></script>
   <script type="module" src="js/sidebar.js"></script>
 </body>
 

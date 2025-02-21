@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Web Image Categorizer - Options</title>
-  <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="lib/bootstrap/bootstrap.min.css" />
   <link rel="stylesheet" href="lib/bootstrap-icons/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/options.css" />
 </head>
@@ -59,8 +59,14 @@
             <div class="mb-3 row">
               <label for="filelu-api-key" class="col-sm-3 col-form-label">API Key</label>
               <div class="col-sm-9">
-                <input type="password" class="form-control" id="filelu-api-key" name="filelu-api-key" maxlength="50"
-                  required="required" />
+                <div class="input-group">
+                  <input type="password" class="form-control" id="filelu-api-key" name="filelu-api-key" maxlength="50"
+                    required="required" />
+                  <button class="btn btn-outline-secondary toggle-password" type="button"
+                    title="Toggle password visibility">
+                    <i class="bi bi-eye-slash"></i>
+                  </button>
+                </div>
                 <div class="form-text">
                   Enable it in FileLu
                   <a href="https://filelu.com/account/" target="_blank">My Account</a> page.
@@ -91,7 +97,12 @@
       <div class="col-sm-10 col-md-9">
         <div class="mb-3">
           <label for="wcipher-password" class="form-label">Encryption Password</label>
-          <input type="password" class="form-control" id="wcipher-password" name="wcipher-password" />
+          <div class="input-group">
+            <input type="password" class="form-control" id="wcipher-password" name="wcipher-password" />
+            <button class="btn btn-outline-secondary toggle-password" type="button" title="Toggle password visibility">
+              <i class="bi bi-eye-slash"></i>
+            </button>
+          </div>
           <div class="form-text">
             Client side encryption password by using <a href="https://github.com/hkalbertl/wcipher"
               target="_blank">WCipher</a>.
@@ -392,7 +403,7 @@
   <!--Modal backdrop for secondary modals-->
   <div id="secondary-modal-backdrop" class="modal-backdrop fade d-none"></div>
   <!--Include required JS files-->
-  <script src="lib/bootstrap/js/bootstrap.min.js"></script>
+  <script src="lib/bootstrap/bootstrap.min.js"></script>
   <script type="module" src="js/options.js"></script>
 </body>
 

@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const editForm = getElement<HTMLFormElement>('edit-form');
   const editDirectory = getElement<HTMLInputElement>('cloud-directory');
   const editFileName = getElement<HTMLInputElement>('cloud-file-name');
+  const editFileExt = getElement<HTMLInputElement>('cloud-file-ext');
+  const editFileExtDisplay = getElement<HTMLSpanElement>('cloud-file-ext-display');
   const editFileInfo = getElement<HTMLInputElement>('cloud-file-info');
   const editFileEncryption = getElement<HTMLInputElement>('cloud-file-encryption');
   const imagePreview = getElement<HTMLImageElement>('cloud-image');
@@ -49,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else if ('fill-image' === message.action) {
       // Image sent from background / content
       await fillImageData(message.blobArray, message.blobType, message.dimension, message.displaySize,
-        message.directory, message.fileName, message.useEncryption);
+        message.directory, message.fileName, message.extension, message.useEncryption);
     } else if ('show-error' === message.action) {
       // Problem occurred in background script, hide elements
       setElementsVisibility(['retrieving-image', 'tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm], false);
@@ -70,7 +72,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Get file name / folder name
     const directory = editDirectory.value || '';
-    let fileName = editFileName.value || '';
+    let fileName = `${editFileName.value || ''}${editFileExt.value}`;
     let fileCode: string | null = null;
     try {
       const config = await WIC.loadConfig(), apiKey = config.provider?.apiKey;
@@ -142,9 +144,11 @@ document.addEventListener('DOMContentLoaded', async () => {
    * @param displaySize
    * @param targetDirectory
    * @param targetFileName
+   * @param targetExtension
    * @param useEncryption
    */
-  async function fillImageData(blobArray: ArrayBuffer, blobType: string, dimension: string, displaySize: string, targetDirectory: string, targetFileName: string, useEncryption: boolean) {
+  async function fillImageData(blobArray: ArrayBuffer, blobType: string, dimension: string, displaySize: string,
+    targetDirectory: string, targetFileName: string, targetExtension: string, useEncryption: boolean) {
     // Check API key defined
     const config = await WIC.loadConfig();
     if (!config || !config.provider) {
@@ -170,8 +174,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // When image loaded
     if (imagePreview.src) {
+      // Set directory
       editDirectory.value = targetDirectory;
+
+      // Split the file name and extension
       editFileName.value = targetFileName;
+      editFileExt.value = targetExtension;
+      editFileExtDisplay.innerText = targetExtension;
 
       // Add file info, such as dimension and size
       let fileInfo: string;
@@ -290,7 +299,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     refreshLink.addEventListener('click', refreshSubFolder);
 
     const refreshIcon = document.createElement('i');
-    refreshIcon.classList.add('bi bi-arrow-repeat');
+    refreshIcon.classList.add('bi', 'bi-arrow-repeat');
     refreshLink.appendChild(refreshIcon);
 
     // Add sub-container

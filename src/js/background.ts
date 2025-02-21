@@ -162,13 +162,14 @@ import WCipher from 'wcipher';
           srcFileName: imageData.fileName,
           directory: nameData.directory,
           fileName: nameData.fileName,
+          extension: nameData.extension,
           useEncryption: nameData.useEncryption,
         });
       } else {
         // Upload to storage provider
+        let fileName = `${nameData.fileName}${nameData.extension}`;
         if ('FileLu' === config.provider.type && config.provider.apiKey) {
           // Prepare file upload variables
-          let fileName = nameData.fileName;
           let uploadBlob = imageBlob;
           // Use encryption if required
           if (config.wcipherPassword && nameData.useEncryption) {
@@ -191,7 +192,7 @@ import WCipher from 'wcipher';
         if (nameData.isMatched) {
           notifyMessage = `✓ Image saved to ${config.provider.type}!`;
         } else {
-          notifyMessage = `⚠ No template matched and image saved to default path: ${nameData.directory}/${nameData.fileName}`;
+          notifyMessage = `⚠ No template matched and image saved to default path: ${nameData.directory}/${fileName}`;
           msgLevel = 2;
         }
         if (msgLevel <= notifyLevel) {

@@ -42,17 +42,21 @@ const config: webpack.Configuration = {
         },
         {
           from: "node_modules/bootstrap/dist/css/bootstrap.min.css",
-          to: "lib/bootstrap/css/bootstrap.min.css",
+          to: "lib/bootstrap/bootstrap.min.css",
           info: { minimized: true }
         },
         {
           from: "node_modules/bootstrap/dist/js/bootstrap.bundle.min.js",
-          to: "lib/bootstrap/js/bootstrap.bundle.min.js",
+          to: "lib/bootstrap/bootstrap.bundle.min.js",
           info: { minimized: true }
         },
         {
-          from: "node_modules/bootstrap-icons/font",
-          to: "lib/bootstrap-icons"
+          from: "node_modules/bootstrap-icons/font/bootstrap-icons.min.css",
+          to: "lib/bootstrap-icons/bootstrap-icons.min.css"
+        },
+        {
+          from: "node_modules/bootstrap-icons/font/fonts",
+          to: "lib/bootstrap-icons/fonts"
         }
       ],
     })

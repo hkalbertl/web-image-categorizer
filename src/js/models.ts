@@ -24,6 +24,7 @@ export class WICMatchResult {
   isMatched = false;
   directory: string = '';
   fileName: string = '';
+  extension: string = '';
   useEncryption: boolean = false;
 }
 
