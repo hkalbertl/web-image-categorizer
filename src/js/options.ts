@@ -52,6 +52,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       setElementsVisibility('notification-row', !sidebarMode);
     });
 
+    // Password toggles
+    document.querySelectorAll('button.toggle-password').forEach((elem: Element) => {
+      const toggleButton = elem as HTMLButtonElement;
+      const targetPassword = toggleButton.parentElement?.querySelector('input.form-control') as HTMLInputElement;
+      if (toggleButton && targetPassword) {
+        // Add button click listener
+        toggleButton.addEventListener('click', () => {
+          // Toggle the type attribute using getAttribure() method
+          const type = targetPassword.getAttribute('type') === 'password' ? 'text' : 'password';
+          targetPassword.setAttribute('type', type);
+          // Toggle the eye and bi-eye icon
+          const eyeElem = toggleButton.querySelector('i') as HTMLElement;
+          eyeElem.classList.toggle('bi-eye');
+        });
+      }
+    });
+
     // Add edit form submit event
     editForm.addEventListener('submit', evt => {
       // Stop standard form submit
