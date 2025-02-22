@@ -16,7 +16,7 @@ Web Image Categorizer (WIC) is a Firefox add-on that helps save images from webp
 ## Features
 * Downloads images from webpages in their original formats and save them to FileLu with just two clicks.
 * Supports naming templates based on webpage URLs so that images are saved to your preferred directory with your chosen file name.
-* Supports sidebar mode so that user can adjust the directory / file name just before saving to FileLu.
+* Supports sidebar mode so that user can adjust the directory / file name / image format just before saving to FileLu.
 * Supports client-side encryption by using [WCipher](https://github.com/hkalbertl/wcipher). Please check [Encryption](https://github.com/hkalbertl/web-image-categorizer/wiki/Documentation#encryption) section of project Wiki for more.
 
 ## Demo 1 - Without Sidebar
@@ -24,6 +24,9 @@ https://github.com/user-attachments/assets/80a826b5-4d8d-4b1d-830b-e2254b72a36f
 
 ## Demo 2 - With Sidebar
 https://github.com/user-attachments/assets/a089d979-41c9-48f7-9620-0b193ba9f59e
+
+## Demo 3 - With Sidebar, changing image format and encrypt image before uploading
+https://github.com/user-attachments/assets/0efcc975-b97a-43fe-b3be-57a147b7641c
 
 ## Installation
 * Download and install the signed .xpi from [release page](https://github.com/hkalbertl/web-image-categorizer/releases) by using the [official instructions](https://extensionworkshop.com/documentation/publish/distribute-sideloading/#install-addon-from-file).
