@@ -70,6 +70,15 @@ const WIC = {
     return false;
   },
   /**
+   * The file extension name by specified mime type.
+   * @param mimeType Target mime type, such as `image/jpeg`.
+   * @returns The file extension name, such as `jpg`.
+   */
+  getExtName: function (mimeType: string | null) {
+    // Get file extension, and force to use `jpg` instead of `jpeg` from mime library :)
+    return !mimeType || 'image/jpeg' === mimeType ? 'jpg' : mime.getExtension(mimeType);
+  },
+  /**
    * Match referrer with templates and generate destination directory and file name.
    * @param templates WIC naming templates.
    * @param referrer The URL contain target image.
@@ -79,9 +88,7 @@ const WIC = {
   matchTemplate: function (templates: WICTemplate[] | null, referrer: string, pageTitle: string, imageFormat: string | null) {
     // Define parameter values
     const now = dayjs(), refUrl = new URL(referrer);
-
-    // Get file extension, and force to use `jpg` instead of `jpeg` from mime library :)
-    const extName = !imageFormat || 'image/jpeg' === imageFormat ? 'jpg' : mime.getExtension(imageFormat);
+    const extName = this.getExtName(imageFormat);
 
     // Define the replace function
     const replaceFunc = (input: string) => {
@@ -184,7 +191,7 @@ const WIC = {
   },
   /**
    * Extract all curly brace patterns in specified text.
-   * @param input
+   * @param input The input text.
    * @returns Return an array of curly brace patterns, or null if the input text is not valid.
    */
   extractCurlyBracePatterns: function (input: string): string[] | null {

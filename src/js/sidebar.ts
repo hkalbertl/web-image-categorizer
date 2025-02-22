@@ -7,13 +7,14 @@ import WCipher from 'wcipher';
 
 document.addEventListener('DOMContentLoaded', async () => {
   // Define global variables
-  let activeImageBlob: Blob | null = null;
+  let originalImageBlob: Blob | null = null, activeImageBlob: Blob | null = null;
+  let originalFileExt: string | null = null, activeFileExt: string | null = null;
   const editForm = getElement<HTMLFormElement>('edit-form');
   const editDirectory = getElement<HTMLInputElement>('cloud-directory');
   const editFileName = getElement<HTMLInputElement>('cloud-file-name');
-  const editFileExt = getElement<HTMLInputElement>('cloud-file-ext');
   const editFileExtDisplay = getElement<HTMLSpanElement>('cloud-file-ext-display');
-  const editFileInfo = getElement<HTMLInputElement>('cloud-file-info');
+  const editFileDimension = getElement<HTMLInputElement>('cloud-file-dimension');
+  const editFileSize = getElement<HTMLInputElement>('cloud-file-size');
   const editFileEncryption = getElement<HTMLInputElement>('cloud-file-encryption');
   const imagePreview = getElement<HTMLImageElement>('cloud-image');
   const dirPickerModal = new bootstrap.Modal('#dir-picker-modal');
@@ -26,10 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (config.provider) {
     // Update title
     const titleSpan = document.querySelector('.navbar-brand .badge') as HTMLSpanElement;
-    titleSpan.classList.remove('d-none');
     titleSpan.innerText = config.provider.type;
     // API Key found, show tips
-    setElementsVisibility('tips-save', true);
+    setElementsVisibility(['tips-save', titleSpan], true);
   } else {
     // Ask to config options
     setElementsVisibility('tips-setup', true);
@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       setElementsVisibility('retrieving-image', true);
       // Reset image data
       imagePreview.src = '';
+      originalImageBlob = null;
       activeImageBlob = null;
     } else if ('fill-image' === message.action) {
       // Image sent from background / content
@@ -61,6 +62,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Return true to indicate the response is asynchronous (optional)
     return true;
   });
+  document.querySelectorAll('#cloud-file-ext-format a.dropdown-item').forEach(elem => {
+    elem.addEventListener('click', updateImageFormat);
+  });
   editForm.addEventListener('submit', async evt => {
     // Block submit
     evt.preventDefault();
@@ -72,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Get file name / folder name
     const directory = editDirectory.value || '';
-    let fileName = `${editFileName.value || ''}${editFileExt.value}`;
+    let fileName = `${editFileName.value || ''}${activeFileExt || ''}`;
     let fileCode: string | null = null;
     try {
       const config = await WIC.loadConfig(), apiKey = config.provider?.apiKey;
@@ -106,14 +110,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Show success alert
       const successAlert = getElement<HTMLDivElement>('upload-success-alert');
-      successAlert.classList.remove('d-none');
+      setElementsVisibility(successAlert, true);
 
       // Config preview link
       const successLink = successAlert.querySelector('a');
       if (successLink) {
         if (!useEncryption) {
           // Set preview link when encryption is not used.
-          successLink.href = 'https://filelu.com/' + fileCode;
+          successLink.href = `https://filelu.com/${fileCode}`;
         }
         setElementsVisibility(successLink, !useEncryption);
       }
@@ -135,6 +139,66 @@ document.addEventListener('DOMContentLoaded', async () => {
     editDirectory.value = folderPath || '/';
     dirPickerModal.hide();
   });
+
+  async function updateImageFormat(evt: Event) {
+    const eventTarget = evt.currentTarget as HTMLAnchorElement;
+    const imageFormat = eventTarget.dataset.format;
+    if (imageFormat && originalImageBlob) {
+      activeImageBlob = null;
+      if ('original' === imageFormat) {
+        // Switch back to original format
+        const arrayBuffer = await originalImageBlob.arrayBuffer();
+        activeImageBlob = new Blob([arrayBuffer], { type: originalImageBlob.type });
+        // Use original extension name
+        activeFileExt = originalFileExt;
+      } else if (imageFormat.startsWith('image/')) {
+        // Encode image
+        activeImageBlob = await encodeImage(originalImageBlob, imageFormat);
+        // Update imagefile  extension
+        activeFileExt = `.${WIC.getExtName(imageFormat)}`;
+      }
+      if (activeImageBlob) {
+        // Convert encoded, set to preview
+        imagePreview.src = URL.createObjectURL(activeImageBlob);
+        // Update image size
+        editFileSize.value = WIC.toDisplaySize(activeImageBlob.size);
+        // Update imagefile  extension
+        editFileExtDisplay.innerText = activeFileExt!;
+      }
+    }
+  }
+
+  async function encodeImage(imageBlob: Blob, imageFormat: string): Promise<Blob> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d");
+        ctx!.drawImage(img, 0, 0);
+
+        // Convert to PNG Blob
+        canvas.toBlob((outputBlob) => {
+          if (outputBlob) {
+            resolve(outputBlob);
+          } else {
+            reject(new Error(`Failed to encode image: ${imageFormat}`));
+          }
+        }, imageFormat);
+      };
+
+      img.onerror = reject;
+
+      // Create a data URL for the image
+      const reader = new FileReader();
+      reader.onload = () => {
+        img.src = reader.result as string;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(imageBlob);
+    });
+  }
 
   /**
    * Load image and show edit form.
@@ -159,6 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
       if (blobArray && blobType) {
         // Restore blob data
+        originalImageBlob = new Blob([blobArray], { type: blobType });
         activeImageBlob = new Blob([blobArray], { type: blobType });
         imagePreview.src = URL.createObjectURL(activeImageBlob);
       } else {
@@ -179,24 +244,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       // Split the file name and extension
       editFileName.value = targetFileName;
-      editFileExt.value = targetExtension;
       editFileExtDisplay.innerText = targetExtension;
+      originalFileExt = targetExtension;
+      activeFileExt = targetExtension;
 
-      // Add file info, such as dimension and size
-      let fileInfo: string;
-      const fileInfoList: string[] = [];
-      if (dimension) {
-        fileInfoList.push(dimension);
-      }
-      if (displaySize) {
-        fileInfoList.push(displaySize);
-      }
-      if (fileInfoList.length) {
-        fileInfo = fileInfoList.join(', ');
-      } else {
-        fileInfo = 'N/A';
-      }
-      editFileInfo.value = fileInfo;
+      // Add file dimension and size
+      editFileDimension.value = dimension || '';
+      editFileSize.value = displaySize || '';
 
       // Config encryption
       if (config.wcipherPassword) {
