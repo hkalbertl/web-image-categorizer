@@ -60,15 +60,31 @@
             <input type="text" class="form-control" id="cloud-file-name" name="cloud-file-name" maxlength="200"
               required="required" />
             <span class="input-group-text" id="cloud-file-ext-display"></span>
+            <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split"
+              data-bs-toggle="dropdown" aria-expanded="false">
+              <span class="visually-hidden">Toggle Dropdown</span>
+            </button>
+            <ul id="cloud-file-ext-format" class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#" data-format="image/jpeg">Save as .jpg</a></li>
+              <li><a class="dropdown-item" href="#" data-format="image/png">Save as .png</a></li>
+              <li><a class="dropdown-item" href="#" data-format="image/webp">Save as .webp</a></li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li><a class="dropdown-item" href="#" data-format="original">Use original format</a></li>
+            </ul>
           </div>
-          <input type="hidden" id="cloud-file-ext" name="cloud-file-ext" />
         </div>
         <div class="mb-3">
           <label for="cloud-file-info" class="form-label">
             File Info
             <span class="badge text-bg-info">for reference only</span>
           </label>
-          <input type="text" class="form-control" id="cloud-file-info" name="cloud-file-info" readonly="readonly" />
+          <div class="input-group">
+            <input type="text" class="form-control" id="cloud-file-dimension" name="cloud-file-dimension"
+              readonly="readonly" />
+            <input type="text" class="form-control" id="cloud-file-size" name="cloud-file-size" readonly="readonly" />
+          </div>
         </div>
         <div class="form-check form-switch mb-3">
           <input class="form-check-input" type="checkbox" role="switch" id="cloud-file-encryption" value="1" />
