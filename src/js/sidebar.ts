@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 import * as bootstrap from 'bootstrap';
 import WIC from './common'
-import { getElement, configBsTheme, setElementsVisibility, setButtonLoading, showErrorAlert } from './common-ui';
+import { getElement, configBsTheme, setElementsVisibility, isElementVisible, setButtonLoading, showErrorAlert } from './common-ui';
 import FILELU from './filelu';
 import WCipher from 'wcipher';
 
@@ -18,6 +18,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const editFileEncryption = getElement<HTMLInputElement>('cloud-file-encryption');
   const imagePreview = getElement<HTMLImageElement>('cloud-image');
   const dirPickerModal = new bootstrap.Modal('#dir-picker-modal');
+  let isProcessing = false;
 
   // Config dark theme
   configBsTheme();
@@ -37,27 +38,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Register event listener
   browser.runtime.onMessage.addListener(async (message: any) => {
-    if ('reload-sidebar' === message.action) {
-      // Reload to apply config
-      self.location.reload();
-    } else if ('prepare-image' === message.action) {
-      // Hide elements
-      setElementsVisibility(['tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm, 'common-error'], false);
-      // Show loading
-      setElementsVisibility('retrieving-image', true);
-      // Reset image data
-      imagePreview.src = '';
-      originalImageBlob = null;
-      activeImageBlob = null;
-    } else if ('fill-image' === message.action) {
-      // Image sent from background / content
-      await fillImageData(message.blobArray, message.blobType, message.dimension, message.displaySize,
-        message.directory, message.fileName, message.extension, message.useEncryption);
-    } else if ('show-error' === message.action) {
-      // Problem occurred in background script, hide elements
-      setElementsVisibility(['retrieving-image', 'tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm], false);
-      // Show error
-      showErrorAlert(message.error);
+    if (!isProcessing) {
+      // Handle messages only when sidebar is idle
+      if ('reload-sidebar' === message.action) {
+        // Reload to apply config
+        self.location.reload();
+      } else if ('prepare-image' === message.action) {
+        // Hide elements
+        setElementsVisibility(['tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm, 'common-error'], false);
+        // Show loading
+        setElementsVisibility('retrieving-image', true);
+        // Reset image data
+        imagePreview.src = '';
+        originalImageBlob = null;
+        activeImageBlob = null;
+      } else if ('fill-image' === message.action) {
+        // Make sure loading message is shown
+        if (isElementVisible('retrieving-image')) {
+          // Image sent from background / content
+          await fillImageData(message.blobArray, message.blobType, message.dimension, message.displaySize,
+            message.directory, message.fileName, message.extension, message.useEncryption);
+        }
+      } else if ('show-error' === message.action) {
+        // Problem occurred in background script, hide elements
+        setElementsVisibility(['retrieving-image', 'tips-setup', 'tips-save', 'upload-success-alert', 'edit-panel', editForm], false);
+        // Show error
+        showErrorAlert(message.error);
+      }
     }
     // Return true to indicate the response is asynchronous (optional)
     return true;
@@ -73,6 +80,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const useEncryption = config.wcipherPassword && editFileEncryption.checked;
     const submitButton = editForm.querySelector('button[type=submit]') as HTMLButtonElement;
     setButtonLoading(submitButton, true);
+    isProcessing = true;
 
     // Get file name / folder name
     const directory = editDirectory.value || '';
@@ -101,6 +109,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       showErrorAlert(message);
     } finally {
       setButtonLoading(submitButton, false);
+      isProcessing = false;
     }
 
     // Show success message

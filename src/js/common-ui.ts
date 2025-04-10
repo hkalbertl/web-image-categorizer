@@ -89,6 +89,24 @@ export function setElementsVisibility(targets: string | HTMLElement | any[], isS
 }
 
 /**
+ * Check target element is visible or not.
+ * @param target The element ID or HTML element object.
+ * @returns Return true if element is visible.
+ */
+export function isElementVisible(target: string | HTMLElement) {
+  let elem: HTMLElement | null;
+  if (typeof target === 'string') {
+    elem = document.getElementById(target);
+  } else {
+    elem = target as HTMLElement;
+  }
+  if (elem && !elem.classList.contains('d-none')) {
+    return true;
+  }
+  return false;
+}
+
+/**
    * Copy element value.
    * @param fromElemId From element ID.
    * @param toElemId To element ID.
