@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Button, Modal, Spinner } from "react-bootstrap";
 import { CheckLg, ExclamationTriangle } from "react-bootstrap-icons";
-import { MessageModalMode } from "@/types/models";
+import { MessageModalMode } from "@/types/common";
 
 interface MessageModalProps {
   show: boolean;

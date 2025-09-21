@@ -30,7 +30,7 @@
     "dayjs": "^1.11.18",
     "fast-xml-parser": "^5.2.5",
     "i18next": "^25.5.2",
-    "matcher": "^5.0.0",
+    "matcher": "^6.0.0",
     "mime": "^4.1.0",
     "react": "^19.1.1",
     "react-bootstrap": "^2.10.10",

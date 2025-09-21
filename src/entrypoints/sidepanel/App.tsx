@@ -1,15 +1,16 @@
 import { Trans, useTranslation } from "react-i18next";
 import { Navbar, Container, NavbarBrand, Form, Button, Alert, Spinner, InputGroup, DropdownButton, Dropdown, Badge } from "react-bootstrap";
 import { CheckLg, ExclamationTriangle, Floppy, Lightbulb, QuestionCircle } from "react-bootstrap-icons";
-import { configBsTheme, loadConfig, dataUrlToArrayBuffer, encodeImage, getExtName, toDisplaySize } from "@/utils/common";
-
-import '../../../node_modules/bootstrap/dist/css/bootstrap.min.css';
-import './App.scss';
+import WCipher from "wcipher";
+import { ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY } from "@/constants/common";
+import { configBsTheme, loadConfig, dataUrlToArrayBuffer, encodeImage, getExtName, toDisplaySize, isValidForFileName } from "@/utils/common";
 import FileLuApi from "@/services/FileLuApi";
 import S3Api from "@/services/S3Api";
 import StorageProvider from "@/services/StorageProvider";
-import WCipher from "wcipher";
-import { ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY } from "@/constants/common";
+
+import '../../../node_modules/bootstrap/dist/css/bootstrap.min.css';
+import './App.scss';
+
 
 function App() {
 
@@ -234,7 +235,7 @@ function App() {
     if (!imageFileName) {
       setImageFileNameError(t("fieldRequired"));
       isValid = false;
-    } else if (!/^(?!.*[<>:"/\\|?*])[^<>:"/\\|?*]+[^. ]$/.test(imageFileName)) {
+    } else if (!isValidForFileName(imageFileName)) {
       setImageFileNameError(t("invalidCharacters"));
       isValid = false;
     }
@@ -397,17 +398,20 @@ function App() {
                     value={imageFileName} onInput={e => setImageFileName(e.currentTarget.value)}
                   />
                   <InputGroup.Text>{displayFileExt}</InputGroup.Text>
-                  <DropdownButton variant="outline-secondary" align="end" className="rounded-end" title="">
-                    {supportedImageFormats.map((format, index) => (
-                      <Dropdown.Item key={index} onClick={() => onImageFormatChanged(format.mime)}>
-                        {format.display}
+                  <Dropdown>
+                    <Dropdown.Toggle variant="outline-secondary" className="rounded-end"></Dropdown.Toggle>
+                    <Dropdown.Menu align="end">
+                      {supportedImageFormats.map((format, index) => (
+                        <Dropdown.Item key={index} onClick={() => onImageFormatChanged(format.mime)}>
+                          {format.display}
+                        </Dropdown.Item>
+                      ))}
+                      <Dropdown.Divider />
+                      <Dropdown.Item onClick={() => onImageFormatChanged('original')}>
+                        {t("useOriginalFormat")}
                       </Dropdown.Item>
-                    ))}
-                    <Dropdown.Divider />
-                    <Dropdown.Item onClick={() => onImageFormatChanged('original')}>
-                      {t("useOriginalFormat")}
-                    </Dropdown.Item>
-                  </DropdownButton>
+                    </Dropdown.Menu>
+                  </Dropdown>
                   <Form.Control.Feedback type="invalid">{imageFileNameError}</Form.Control.Feedback>
                 </InputGroup>
               </Form.Group>

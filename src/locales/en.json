@@ -47,10 +47,21 @@
   "templateNotWellFormed": "Number of curly braces should be matched and well-formed.",
   "unsupportedParameter": "Unsupported parameter: ",
   "invalidCharacterInParameter": "Invalid character(s) found in parameter: ",
+  "invalidCharacterInDirectory": "Invalid character(s) found in directory path: ",
   "invalidCharacters": "Invalid character(s) found.",
   "invalidProviderOptions": "Unknown storage provider or imcomplete config: ",
   "imageUploaded": "Image uploaded successfully!",
   "saveAsJpg": "Save as .jpg",
   "saveAsPng": "Save as .png",
-  "saveAsWebp": "Save as .webp"
+  "saveAsWebp": "Save as .webp",
+  "enableFileLuApiKeyAtMyAccount": "Enable it in FileLu <0>My Account</0> page.",
+  "suggestFileLuReferral": "New to FileLu? Consider to register by using author's <0>referral link</0>.",
+  "encryptionPasswordHelpText": "Client side encryption password by using <0>WCipher</0>.",
+  "urls": "URLs",
+  "failedToImportOptions": "Failed to import from options file: ",
+  "validatingOptionsFile": "Validating options file...",
+  "imageJpg": ".JPG (The most common image format)",
+  "imagePng": ".PNG (Lossless compression but larger file size)",
+  "imageWebp": ".WEBP (Modern image format developed by Google)",
+  "optionsLoadedAndChooseProvider": "Configuration loaded successfully. Please select a provider and enter your API keys to complete setup."
 }

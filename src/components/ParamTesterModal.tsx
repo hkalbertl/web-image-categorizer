@@ -1,7 +1,7 @@
 import { Alert, Button, Form, Modal } from "react-bootstrap";
 import { CheckLg, ExclamationTriangle, ClipboardPulse, Send, XLg } from "react-bootstrap-icons";
 import { useTranslation } from "react-i18next";
-import { WICTemplate } from "@/types/models";
+import { WICTemplate } from "@/types/common";
 import { validateTemplateInput, matchTemplate, getErrorMessage } from "@/utils/common";
 
 interface ParamTesterModalProps {
@@ -69,7 +69,8 @@ const ParamTesterModal: React.FC<ParamTesterModalProps> = ({ show, pattern, isDi
         const matching = matchTemplate([queryPattern], testUrl, 'Sample-Page-Title', 'image/jpeg');
         if (matching && matching.isMatched) {
           // Data matched
-          setSuccessMessage(isDirMode ? matching.directory : matching.fileName);
+          const msg = isDirMode ? matching.directory : matching.fileName;
+          if (msg) setSuccessMessage(msg);
         } else {
           // Failed to match or required parameter does not exist
           itemError = 'Failed to match, please double check parameters defined in pattern.';

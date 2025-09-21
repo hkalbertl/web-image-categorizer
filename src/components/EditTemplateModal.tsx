@@ -1,5 +1,5 @@
 import { validateTemplateInput } from "@/utils/common";
-import { WICTemplate } from "@/types/models";
+import { WICTemplate } from "@/types/common";
 import { Button, Form, InputGroup, Modal } from "react-bootstrap";
 import { ClipboardPulse, Pencil, XLg } from "react-bootstrap-icons";
 import UrlTesterModal from "./UrlTesterModal";

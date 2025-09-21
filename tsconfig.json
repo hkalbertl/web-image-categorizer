@@ -2,6 +2,7 @@
   "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
     "allowImportingTsExtensions": true,
+    "allowUmdGlobalAccess": false,
     "jsx": "react-jsx"
   }
 }

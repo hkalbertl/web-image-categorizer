@@ -1,4 +1,6 @@
-
+/**
+ * The application configuration saved to browser.storage.sync.
+ */
 export interface WICConfig {
   provider?: WICProvider;
   wcipherPassword?: string;
@@ -8,6 +10,9 @@ export interface WICConfig {
   imageFormat: WICImageFormat;
 }
 
+/**
+ * Storage provider configuration.
+ */
 export interface WICProvider {
   type: WICProviderType;
   apiKey?: string;
@@ -15,19 +20,19 @@ export interface WICProvider {
   secretKey?: string;
 }
 
-export interface WICTemplate {
-  url?: string;
+export interface BaseEntry {
   directory?: string;
   fileName?: string;
   encryption: boolean;
 }
 
-export class WICMatchResult {
-  isMatched = false;
-  directory: string = '';
-  fileName: string = '';
-  extension: string = '';
-  useEncryption: boolean = false;
+export interface WICTemplate extends BaseEntry {
+  url: string;
+}
+
+export interface WICMatchResult extends BaseEntry {
+  isMatched: boolean;
+  extension?: string;
 }
 
 export interface WICImageData {

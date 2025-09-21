@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import mime from 'mime';
 import { isMatch } from 'matcher';
-import { WICConfig, WICTemplate, WICMatchResult } from '../types/models'
+import { WICConfig, WICTemplate, WICMatchResult } from '../types/common'
 import { DEFAULT_CONFIG } from '@/constants/common';
 import i18n from '@/i18n';
 
@@ -87,6 +87,13 @@ export const getExtName = (mimeType?: string) => {
 };
 
 /**
+ * Get the current date/time in numeric string format.
+ */
+export const getNowString = () => {
+  return dayjs().format(NOW_FORMAT);
+};
+
+/**
  * Match referrer with templates and generate destination directory and file name.
  * @param templates WIC naming templates.
  * @param referrer The URL contain target image.
@@ -169,7 +176,10 @@ export const matchTemplate = (templates: WICTemplate[] | null, referrer: string,
   };
 
   // Define result object and apply template when matched
-  const result = new WICMatchResult();
+  const result: WICMatchResult = {
+    isMatched: false,
+    encryption: false,
+  };
   if (templates && Array.isArray(templates)) {
     for (const template of templates) {
       if (isUrlMatch(referrer, template.url)) {
@@ -181,7 +191,7 @@ export const matchTemplate = (templates: WICTemplate[] | null, referrer: string,
           result.fileName = replaceFunc(template.fileName);
         }
         result.extension = `.${extName}`;
-        result.useEncryption = template.encryption;
+        result.encryption = template.encryption;
         result.isMatched = true;
         break;
       }
@@ -213,7 +223,6 @@ export const extractCurlyBracePatterns = (input: string): string[] | null => {
   }
   return null;
 };
-
 
 /**
  * Check if the input string has matched number of curly braces.
@@ -257,7 +266,6 @@ export const isValidWicParams = (input: string): boolean => {
   }
   return false;
 };
-
 
 /**
  * Check if the specified input text in valid for file name.
@@ -305,7 +313,7 @@ export const validateTemplateInput = (input: string, isDirectory: boolean): stri
       if (segments && segments.length) {
         for (const segment of segments) {
           if (!isValidForFileName(segment)) {
-            itemError = `Invalid character(s) found in directory path: ${segment}`;
+            itemError = i18n.t("invalidCharacterInDirectory") + segment;
             break;
           }
         }
@@ -313,27 +321,12 @@ export const validateTemplateInput = (input: string, isDirectory: boolean): stri
     } else if (!isDirectory) {
       // Check for invaid character(s)
       if (!isValidForFileName(input)) {
-        itemError = `Invalid character(s) found.`;
+        itemError = i18n.t("invalidCharacters");
       }
     }
   }
   return itemError;
 };
-
-/**
- * Convert blob to data URL.
- * @param blob
- * @returns The data URL.
- */
-export const blobToDataUrl = async (blob: Blob): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-};
-
 
 /**
  * Sleep for a while.

@@ -2,7 +2,7 @@ import i18n from "../i18n";
 import WCipher from "wcipher";
 import { loadConfig, sleep, toDisplaySize, matchTemplate, getErrorMessage, openSidebar, arrayBufferToDataUrl } from "@/utils/common";
 import { DEFAULT_CONFIG, ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY } from '@/constants/common';
-import { WICConfig, WICImageData } from "@/types/models";
+import { WICConfig, WICImageData } from "@/types/common";
 import StorageProvider from "@/services/StorageProvider";
 import FileLuApi from "@/services/FileLuApi";
 import S3Api from "@/services/S3Api";
@@ -180,7 +180,7 @@ export default defineBackground(() => {
           directory: nameData.directory,
           fileName: nameData.fileName,
           extension: nameData.extension,
-          useEncryption: nameData.useEncryption,
+          useEncryption: nameData.encryption,
         });
       } else {
         // Upload to storage provider
@@ -198,7 +198,7 @@ export default defineBackground(() => {
         // Encrypt file, if required
         let uploadBlob = imageBlob;
         let fileName = `${nameData.fileName}${nameData.extension}`;
-        if (appConfig.wcipherPassword && nameData.useEncryption) {
+        if (appConfig.wcipherPassword && nameData.encryption) {
           // Use WCipher for encryption
           const imageBytes = await imageBlob.arrayBuffer();
           const encryptedBytes = await WCipher.encrypt(appConfig.wcipherPassword, new Uint8Array<ArrayBuffer>(imageBytes));
@@ -208,7 +208,7 @@ export default defineBackground(() => {
         }
 
         // Upload file
-        await api.uploadFile(nameData.directory, fileName, uploadBlob);
+        await api.uploadFile(nameData.directory!, fileName, uploadBlob);
 
         // Update notification
         let notifyMessage: string | null = null, msgLevel = 3;

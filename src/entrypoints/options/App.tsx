@@ -1,15 +1,15 @@
-import { useTranslation } from 'react-i18next';
-import { Alert, Button, Card, Col, Container, Form, Nav, Navbar, NavbarBrand, Row, Tab, Tabs } from 'react-bootstrap';
-import { Floppy, InfoCircle, Lock, Pencil, PlusLg, Power, QuestionCircle, Trash, Unlock } from 'react-bootstrap-icons';
-import { MessageModalMode, WICImageFormat, WICProviderType, WICTemplate } from '@/types/models';
+import { useTranslation, Trans } from 'react-i18next';
+import { Alert, Button, Card, Col, Container, Dropdown, DropdownButton, Form, Nav, Navbar, NavbarBrand, Row, Tab, Tabs } from 'react-bootstrap';
+import { Floppy, Gear, InfoCircle, Lock, Pencil, PlusLg, Power, QuestionCircle, Trash, Unlock } from 'react-bootstrap-icons';
+import { MessageModalMode, WICConfig, WICImageFormat, WICProviderType, WICTemplate } from '@/types/common';
 import EditTemplateModal from '@/components/EditTemplateModal';
 import MessageModal from '@/components/MessageModal';
 import StorageProvider from '@/services/StorageProvider';
 import PasswordField from '@/components/PasswordField';
 import FileLuApi from '@/services/FileLuApi';
 import S3Api from '@/services/S3Api';
-import { configBsTheme, getErrorMessage, loadConfig, openSidebar } from '@/utils/common';
-import { DEFAULT_CONFIG } from '@/constants/common';
+import { configBsTheme, getErrorMessage, loadConfig, openSidebar, getNowString } from '@/utils/common';
+import { DEFAULT_CONFIG, SUPPORT_IMAGE_TYPES } from '@/constants/common';
 
 import '../../../node_modules/bootstrap/dist/css/bootstrap.min.css';
 import './App.scss';
@@ -19,6 +19,7 @@ function App() {
   const { t } = useTranslation();
 
   const [windowId, setWindowId] = useState(0);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
   // On screen input binding
   const [providerType, setProviderType] = useState<WICProviderType>('FileLu');
@@ -26,9 +27,9 @@ function App() {
   const [s3AccessId, setS3AccessId] = useState<string>('');
   const [s3SecretKey, setS3SecretKey] = useState<string>('');
   const [encPassword, setEncPassword] = useState<string>('');
-  const [enableSideBar, setEnableSidebar] = useState(false);
+  const [sidebarMode, setSidebarMode] = useState(0);
   const [notificationLevel, setNotificationLevel] = useState(4);
-  const [imageFormat, setImageFormat] = useState<WICImageFormat>('image/jpeg');
+  const [imageFormat, setImageFormat] = useState<WICImageFormat>(SUPPORT_IMAGE_TYPES[0].mime);
 
   // Validation related
   const [fileLuApiKeyError, setFileLuApiKeyError] = useState<string | undefined>();
@@ -45,6 +46,28 @@ function App() {
   const [showMsgModal, setShowMsgModal] = useState(false);
   const [msgModalMode, setMsgModalMode] = useState<MessageModalMode>('progress');
   const [msgModalText, setMsgModalText] = useState<string>();
+
+  /**
+   * Put specified config values on screen.
+   */
+  const applyConfigOnScreen = (config: WICConfig) => {
+    if (config.provider) {
+      setProviderType(config.provider.type);
+      if ('FileLu' === config.provider.type) {
+        setFileLuApiKey(config.provider.apiKey || '');
+      } else if ('S3' === config.provider.type) {
+        setS3AccessId(config.provider.accessId || '');
+        setS3SecretKey(config.provider.secretKey || '');
+      }
+    }
+    if (Array.isArray(config.templates)) {
+      setNamingTemplates(config.templates);
+    }
+    setEncPassword(config.wcipherPassword || '');
+    setSidebarMode(config.sidebarMode);
+    setNotificationLevel(config.notificationLevel);
+    setImageFormat(config.imageFormat);
+  }
 
   const appendNewTemplate = () => {
     setTemplateForEdit(undefined);
@@ -74,7 +97,7 @@ function App() {
     setNamingTemplates(editedTemplates);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const onFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -114,7 +137,7 @@ function App() {
     };
     config.wcipherPassword = encPassword;
     config.templates = [...namingTemplates];
-    config.sidebarMode = enableSideBar ? 1 : 0;
+    config.sidebarMode = sidebarMode ? 1 : 0;
     config.notificationLevel = notificationLevel;
     config.imageFormat = imageFormat;
 
@@ -161,19 +184,139 @@ function App() {
     return false;
   };
 
-  const handleReset = () => {
+  const onExport = async () => {
+    let downloadUrl: string | undefined = undefined;
+    try {
+      // Load saved config
+      const savedConfig = await loadConfig();
+      // Prepare export config content
+      const exportConfig = {
+        version: 1,
+        ...savedConfig,
+      };
+      if (savedConfig.provider) {
+        // Just keep the provider type
+        exportConfig.provider = {
+          type: savedConfig.provider.type
+        };
+      }
+      // Remove password
+      delete exportConfig.wcipherPassword;
+      // Prepare download blob
+      const exportJson = JSON.stringify(exportConfig);
+      const exportBlob = new Blob([exportJson], { type: "application/json" });
+      downloadUrl = URL.createObjectURL(exportBlob);
+      // Prompt for download
+      await browser.downloads.download({
+        url: downloadUrl!,
+        filename: `wic-options-${getNowString()}.json`,
+        saveAs: true, // prompts user to pick location
+      });
+    } finally {
+      if (downloadUrl) {
+        URL.revokeObjectURL(downloadUrl);
+      }
+    }
+  };
+
+  const onImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    setMsgModalMode('progress');
+    setMsgModalText(t("validatingOptionsFile"));
+    setShowMsgModal(true);
+    try {
+      // Prepare config variable and read the input file
+      const importConfig: WICConfig = { ...DEFAULT_CONFIG };
+      const rawText = await selectedFile.text();
+      const rawJson = JSON.parse(rawText);
+
+      if (!rawJson.version || !isFinite(rawJson.version) || isNaN(rawJson.version) || 1 !== +rawJson.version) {
+        // Missing or unknown version
+        throw new Error('Missing or unknown version.');
+      }
+
+      if (!rawJson.provider || 'object' !== typeof rawJson.provider
+        || 'string' !== typeof rawJson.provider.type
+        || !['FileLu', 'S3'].includes(rawJson.provider.type)) {
+        // Missing or unknown provider type
+        throw new Error('Missing or unknown provider type.');
+      }
+      importConfig.provider = {
+        type: rawJson.provider.type
+      };
+
+      // Validate templates
+      if (rawJson.templates) {
+        if (!Array.isArray(rawJson.templates)) {
+          // Non array templates detected
+          throw new Error('Unknown templates.');
+        } else if (rawJson.templates.length) {
+          importConfig.templates = [];
+          for (const item of rawJson.templates) {
+            if (!item.url || 'string' !== typeof item.url || 0 === item.url.length) {
+              throw new Error('Missing or unknown template URL.');
+            }
+            if (item.directory && 'string' !== typeof item.directory) {
+              throw new Error('Unknown template directory.');
+            }
+            if (item.fileName && 'string' !== typeof item.fileName) {
+              throw new Error('Unknown template file name.');
+            }
+            if ('boolean' !== typeof item.encryption) {
+              throw new Error('Unknown template encryption.');
+            }
+            importConfig.templates.push({
+              url: item.url,
+              directory: item.directory || undefined,
+              fileName: item.fileName || undefined,
+              encryption: item.encryption || false,
+            } as WICTemplate);
+          }
+        }
+      }
+
+      if ('number' !== typeof rawJson.sidebarMode || 0 > rawJson.sidebarMode || 1 < rawJson.sidebarMode) {
+        throw new Error('Missing or unknown sidebar mode.');
+      }
+      importConfig.sidebarMode = rawJson.sidebarMode;
+
+      if (0 === importConfig.sidebarMode) {
+        if ('number' !== typeof rawJson.notificationLevel || 0 > rawJson.notificationLevel || 4 < rawJson.notificationLevel) {
+          throw new Error('Missing or unknown notification level.');
+        }
+        importConfig.notificationLevel = rawJson.notificationLevel;
+      }
+
+      if (!rawJson.imageFormat || 'string' !== typeof rawJson.imageFormat
+        || !SUPPORT_IMAGE_TYPES.some(im => im.mime === rawJson.imageFormat)) {
+        throw new Error('Missing or unknown template image format.');
+      }
+      importConfig.imageFormat = rawJson.imageFormat;
+
+      // Config valid!
+      applyConfigOnScreen(importConfig);
+      setMsgModalText(t("optionsLoadedAndChooseProvider"));
+      setMsgModalMode('success');
+
+    } catch (ex) {
+      console.error('Failed to import: ', ex);
+      setMsgModalText(t("failedToImportOptions") + getErrorMessage(ex));
+      setMsgModalMode('failed');
+    }
+  };
+
+  const onReset = async () => {
     if (confirm(t('confirmResetOptions'))) {
       // Clear all settings
-      browser.storage.sync.clear().then(() => {
-        // Send reload sidebar message
-        const actionType = 'reload-sidebar';
-        browser.runtime.sendMessage({ action: actionType }).then(() => {
-          // Reload current option page
-          self.location.reload();
-        }).catch(err => {
-          console.warn(`Failed to send message[${actionType}]: ${getErrorMessage(err)}`);
-        });
+      await browser.storage.sync.clear();
+      // Send reload sidebar message
+      browser.runtime.sendMessage({ action: 'reload-sidebar' }).catch(err => {
+        console.warn('Failed to send reload sidebar message: ' + getErrorMessage(err));
       });
+      // Reload current option page
+      self.location.reload();
     }
   }
 
@@ -191,19 +334,7 @@ function App() {
     }
     // Load config
     loadConfig().then(savedConfig => {
-      if (savedConfig.provider) {
-        setProviderType(savedConfig.provider.type);
-        if ('FileLu' === savedConfig.provider.type) {
-          setFileLuApiKey(savedConfig.provider.apiKey || '');
-        } else if ('S3' === savedConfig.provider.type) {
-          setS3AccessId(savedConfig.provider.accessId || '');
-          setS3SecretKey(savedConfig.provider.secretKey || '');
-        }
-      }
-      setEncPassword(savedConfig.wcipherPassword || '');
-      setEnableSidebar(0 !== savedConfig.sidebarMode);
-      setNotificationLevel(savedConfig.notificationLevel);
-      setImageFormat(savedConfig.imageFormat);
+      applyConfigOnScreen(savedConfig);
     });
   }, []);
 
@@ -226,7 +357,7 @@ function App() {
       </Container>
     </Navbar>
 
-    <Form className="pt-3 option-form" autoComplete="off" noValidate onSubmit={handleFormSubmit}>
+    <Form className="pt-3 option-form" autoComplete="off" noValidate onSubmit={onFormSubmit}>
       <Row>
         <Col sm="2" md="3" className="pb-3 pb-sm-0">{t("storageProviders")}</Col>
         <Col sm="10" md="9">
@@ -240,12 +371,16 @@ function App() {
                   <Col sm={9}>
                     <PasswordField password={fileLuApiKey} onInput={setFileLuApiKey} invalidMsg={fileLuApiKeyError} />
                     <Form.Text className="d-block">
-                      Enable it in FileLu&nbsp;
-                      <a href="https://filelu.com/account/" target="_blank">My Account</a> page.
+                      <Trans
+                        i18nKey="enableFileLuApiKeyAtMyAccount"
+                        components={[<a href="https://filelu.com/account/" target="_blank" />]}
+                      />
                     </Form.Text>
                     <Form.Text>
-                      New to FileLu? Consider to register by using author's <a href="https://filelu.com/5155514948.html"
-                        target="_blank">referral link</a>.
+                      <Trans
+                        i18nKey="suggestFileLuReferral"
+                        components={[<a href="https://filelu.com/5155514948.html" target="_blank" />]}
+                      />
                     </Form.Text>
                   </Col>
                 </Form.Group>
@@ -286,8 +421,10 @@ function App() {
             <Form.Label>{t("encryptionPassword")}</Form.Label>
             <PasswordField password={encPassword} onInput={setEncPassword} />
             <Form.Text>
-              Client side encryption password by using <a href="https://github.com/hkalbertl/wcipher"
-                target="_blank">WCipher</a>.
+              <Trans
+                i18nKey="encryptionPasswordHelpText"
+                components={[<a href="https://github.com/hkalbertl/wcipher" target="_blank" />]}
+              />
             </Form.Text>
           </Form.Group>
         </Col>
@@ -300,7 +437,7 @@ function App() {
               <table className="table table-hover template-table">
                 <thead>
                   <tr>
-                    <td colSpan={2}>URLs</td>
+                    <td colSpan={2}>{t("urls")}</td>
                   </tr>
                 </thead>
                 {0 !== namingTemplates.length &&
@@ -341,7 +478,7 @@ function App() {
         <Col sm="10" md="9" className="field-list">
           <Form.Group controlId="sidebar-mode">
             <Form.Label>Use of Sidebar</Form.Label>
-            <Form.Select value={enableSideBar ? "1" : "0"} onChange={e => setEnableSidebar(0 !== +e.currentTarget.value)}>
+            <Form.Select value={sidebarMode ? "1" : "0"} onChange={e => setSidebarMode(+e.currentTarget.value)}>
               <option value="0">Disabled, save images to cloud directly</option>
               <option value="1">Enabled, edit the directory or file name before saving</option>
             </Form.Select>
@@ -349,7 +486,7 @@ function App() {
               You can enable sidebar to show the edit form for target directory and file name before saving.
             </Form.Text>
           </Form.Group>
-          {!enableSideBar &&
+          {!sidebarMode &&
             <Form.Group controlId="notification-level">
               <Form.Label>Notifications</Form.Label>
               <Form.Select value={`${notificationLevel}`} onChange={e => setNotificationLevel(+e.currentTarget.value)}>
@@ -366,9 +503,9 @@ function App() {
           <Form.Group controlId="image-format">
             <Form.Label>Fallback Image Format</Form.Label>
             <Form.Select value={imageFormat} onChange={e => setImageFormat(e.currentTarget.value as WICImageFormat)}>
-              <option value="image/jpeg">.JPG (The most common image format)</option>
-              <option value="image/png">.PNG (Lossless compression but larger file size)</option>
-              <option value="image/webp">.WEBP (Modern image format developed by Google)</option>
+              {SUPPORT_IMAGE_TYPES.map((item, index) => (
+                <option key={index} value={item.mime}>{item.selectText}</option>
+              ))}
             </Form.Select>
             <Form.Text>
               If an image cannot be downloaded in its original format, WIC will use an alternative method to download and save it in the specified format.
@@ -379,12 +516,26 @@ function App() {
       <Row>
         <Col sm="2" md="3"></Col>
         <Col sm="10" md="9">
-          <div className="d-flex mb-3">
-            <Button variant="primary" type="submit">
+          <div className="d-flex gap-2 mb-3">
+            <Button variant="primary" type="submit" className="me-auto">
               <Floppy />
               {t("save")}
             </Button>
-            <Button variant="outline-danger" className="ms-auto" onClick={handleReset}>
+            <input
+              type="file"
+              accept="application/json"
+              ref={importInputRef}
+              onChange={onImport}
+              className="d-none"
+            />
+            <DropdownButton variant="outline-secondary" title={<><Gear />{t("options")}</>} align="end">
+              <Dropdown.Item onClick={() => {
+                importInputRef.current!.value = '';
+                importInputRef.current!.click();
+              }}>Import from file</Dropdown.Item>
+              <Dropdown.Item onClick={onExport}>Export to file, excluded API keys / secrets</Dropdown.Item>
+            </DropdownButton>
+            <Button variant="outline-danger" onClick={onReset}>
               <Power />
               {t("reset")}
             </Button>
