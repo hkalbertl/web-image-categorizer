@@ -1,0 +1,45 @@
+main {
+  &>div.alert:first-child {
+    margin-top: 1rem;
+  }
+
+  form>div {
+    margin-bottom: 1rem;
+  }
+}
+
+#cloud-image-container {
+  /* Makes the container take the full width of its parent */
+  width: 100%;
+  /* Automatically adjusts height to maintain the aspect ratio */
+  height: auto;
+}
+
+#cloud-image {
+  /* Makes the image fit to the parent width */
+  width: 100%;
+  /* Keeps the aspect ratio */
+  height: auto;
+  /* Ensures the image does not exceed half of the viewport height */
+  max-height: 40vh;
+  /* Keeps the aspect ratio intact */
+  object-fit: contain;
+  /* Removes any unnecessary whitespace around the image */
+  display: block;
+}
+
+.navbar .navbar-brand .badge,
+.form-label .badge {
+  margin-left: .5em;
+}
+
+div.alert>svg,
+div.alert>.spinner-border,
+.btn>svg,
+.btn>.spinner-border {
+  margin-right: .2em;
+}
+
+div.alert svg.bi {
+  font-size: 1.8rem;
+}
