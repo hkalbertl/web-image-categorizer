@@ -402,6 +402,12 @@ export const dataUrlToArrayBuffer = (dataUrl: string): ArrayBuffer => {
   return bytes.buffer;
 }
 
+/**
+ * Encode image into specified format.
+ * @param imageBlob Source image blob data.
+ * @param imageFormat Target image mime type, such as "image/png".
+ * @returns Output image blob.
+ */
 export const encodeImage = async (imageBlob: Blob, imageFormat: string): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -432,4 +438,15 @@ export const encodeImage = async (imageBlob: Blob, imageFormat: string): Promise
     reader.onerror = reject;
     reader.readAsDataURL(imageBlob);
   });
+}
+
+/**
+ * Normalize path by trimming whitespaces, removing multiple slashes and removing last slashes.
+ * @param directoryPath Directory path, such as `/path/to/target/directory`.
+ */
+export const normalizeDirectoryPath = (directoryPath: string): string => {
+  if (directoryPath) {
+    return directoryPath.trim().replace(/\s*[\/]{2,}\s*/g, '/').replace(/[\s\/]+$/g, '');
+  }
+  return '';
 }

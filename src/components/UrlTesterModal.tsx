@@ -29,7 +29,7 @@ const UrlTesterModal: React.FC<UrlTesterModalProps> = ({ show, pattern, onClose,
   /**
    * Handle form submit, which is testing the input pattern.
    */
-  const handleSubmit = (e: React.FormEvent) => {
+  const onFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
     resetForm(true);
@@ -89,7 +89,7 @@ const UrlTesterModal: React.FC<UrlTesterModalProps> = ({ show, pattern, onClose,
         <Modal.Title>URL Pattern Tester</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form id="url-test-form" autoComplete="off" noValidate onSubmit={handleSubmit}>
+        <Form id="url-test-form" autoComplete="off" noValidate onSubmit={onFormSubmit}>
           <Form.Group className="mb-3">
             <Form.Label htmlFor="url-test-pattern">URL Pattern</Form.Label>
             <Form.Control id="url-test-pattern" type="text"

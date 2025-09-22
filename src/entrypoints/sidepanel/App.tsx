@@ -3,7 +3,7 @@ import { Navbar, Container, NavbarBrand, Form, Button, Alert, Spinner, InputGrou
 import { CheckLg, ExclamationTriangle, Floppy, Lightbulb, QuestionCircle } from "react-bootstrap-icons";
 import WCipher from "wcipher";
 import { ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY } from "@/constants/common";
-import { configBsTheme, loadConfig, dataUrlToArrayBuffer, encodeImage, getExtName, toDisplaySize, isValidForFileName } from "@/utils/common";
+import { configBsTheme, loadConfig, dataUrlToArrayBuffer, encodeImage, getExtName, toDisplaySize, isValidForFileName, normalizeDirectoryPath } from "@/utils/common";
 import FileLuApi from "@/services/FileLuApi";
 import S3Api from "@/services/S3Api";
 import StorageProvider from "@/services/StorageProvider";
@@ -221,21 +221,26 @@ function App() {
     setSuccessMessage(undefined);
 
     // Validate form
-    let isValid = true;
-    if (!imageDirectory) {
+    let isValid = true, trimmedDirectory = normalizeDirectoryPath(imageDirectory);
+    if (!trimmedDirectory) {
       setImageDirectoryError(t("fieldRequired"));
       isValid = false;
-    } else if ('/' !== imageDirectory.charAt(0)) {
+    } else if ('/' !== trimmedDirectory.charAt(0)) {
       setImageDirectoryError(t("directoryStartWithSlash"));
       isValid = false;
-    } else if (!/^\/(?:[^<>:"\\|?*\/]+(?:\/[^<>:"\\|?*\/]+)*)\/?$/.test(imageDirectory)) {
-      setImageDirectoryError(t("invalidCharacters"));
-      isValid = false;
+    } else {
+      // Check each folder name
+      const folders = trimmedDirectory.substring(1).split('/');
+      if (!folders.every(isValidForFileName)) {
+        setImageDirectoryError(t("invalidCharacters"));
+        isValid = false;
+      }
     }
-    if (!imageFileName) {
+    const trimmedFileName = imageFileName.trim();
+    if (!trimmedFileName) {
       setImageFileNameError(t("fieldRequired"));
       isValid = false;
-    } else if (!isValidForFileName(imageFileName)) {
+    } else if (!isValidForFileName(trimmedFileName)) {
       setImageFileNameError(t("invalidCharacters"));
       isValid = false;
     }
@@ -262,8 +267,7 @@ function App() {
     // Prepare to upload
     setIsSaving(true);
     try {
-      const trimmedDirectory = imageDirectory.trim();
-      let fileName = `${imageFileName.trim()}${displayFileExt}`;
+      let fileName = `${trimmedFileName}${displayFileExt}`;
       let uploadBlob: Blob = activeImageBlob!;
 
       if (useEncryption && appConfig.wcipherPassword) {
@@ -276,13 +280,14 @@ function App() {
       }
 
       // Upload file
-      await api.uploadFile(trimmedDirectory, fileName, uploadBlob);
+      const fileRef = await api.uploadFile(trimmedDirectory, fileName, uploadBlob);
+      console.debug(`File uploaded: ${fileRef}`);
 
       // Set success message and hide edit form
       setSuccessMessage(t("imageUploaded"));
       setShowEditForm(false);
     } catch (ex) {
-      setErrorMessage(t("invalidProviderOptions") + (appConfig.provider?.type || 'Unknown'));
+      setErrorMessage(t("failedToUploadFile") + getErrorMessage(ex));
     } finally {
       setIsSaving(false);
     }

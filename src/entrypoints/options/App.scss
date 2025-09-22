@@ -50,6 +50,7 @@ body:has(.modal.show.modal-secondary) .modal-backdrop {
   margin-right: .2em;
 }
 
-.btn.no-text svg {
+.btn.no-text svg,
+.template-table tbody .btn-group .btn svg {
   margin-right: 0;
 }

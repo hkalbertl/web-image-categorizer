@@ -5,15 +5,17 @@ import { ClipboardPulse, Pencil, XLg } from "react-bootstrap-icons";
 import UrlTesterModal from "./UrlTesterModal";
 import ParamTesterModal from "./ParamTesterModal";
 import { useTranslation } from "react-i18next";
+import { normalizeDirectoryPath } from "@/utils/common";
 
 interface EditTemplateModalProps {
   show: boolean;
-  template?: WICTemplate; // if undefined → add mode
+  isEditing: boolean;
+  template?: WICTemplate;
   onClose: () => void;
   onSave: (template: WICTemplate) => void;
 }
 
-const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, template, onClose, onSave }) => {
+const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, template, onClose, onSave }) => {
 
   const { t } = useTranslation();
 
@@ -31,7 +33,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, template, o
   const [paramTesterPattern, setParamTesterPattern] = useState("");
   const [paramTesterDirMode, setParamTesterDirMode] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const onFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -44,7 +46,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, template, o
     // Read form values
     const record: WICTemplate = {
       url: url.trim(),
-      directory: directory.trim(),
+      directory: normalizeDirectoryPath(directory),
       fileName: fileName.trim(),
       encryption
     };
@@ -91,7 +93,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, template, o
   const onModalOpen = () => {
     // Reset form
     resetForm();
-    // Fill existing template record, if it is in edit mode
+    // Fill existing template record, if defined
     if (template) {
       setUrl(template.url || '');
       setDirectory(template.directory || '');
@@ -130,7 +132,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, template, o
         <Modal.Title>Naming Template</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form id="url-template-form" autoComplete="off" noValidate onSubmit={handleSubmit}>
+        <Form id="url-template-form" autoComplete="off" noValidate onSubmit={onFormSubmit}>
           <Form.Group className="mb-3">
             <Form.Label htmlFor="template-url-pattern">URL Pattern</Form.Label>
             <InputGroup>
@@ -221,7 +223,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, template, o
       <Modal.Footer className="align-item-start">
         <Button variant="primary" type="submit" form="url-template-form">
           <Pencil />
-          &nbsp;{t(template ? "edit" : "add")}
+          &nbsp;{t(isEditing ? "edit" : "add")}
         </Button>
         <Button variant="outline-secondary" type="button" className="ms-auto" onClick={onClose}>
           <XLg />

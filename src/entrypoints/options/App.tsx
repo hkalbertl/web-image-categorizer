@@ -1,6 +1,6 @@
 import { useTranslation, Trans } from 'react-i18next';
-import { Alert, Button, Card, Col, Container, Dropdown, DropdownButton, Form, Nav, Navbar, NavbarBrand, Row, Tab, Tabs } from 'react-bootstrap';
-import { Floppy, Gear, InfoCircle, Lock, Pencil, PlusLg, Power, QuestionCircle, Trash, Unlock } from 'react-bootstrap-icons';
+import { Alert, Button, ButtonGroup, Card, Col, Container, Dropdown, DropdownButton, Form, Nav, Navbar, NavbarBrand, Row, Tab, Tabs } from 'react-bootstrap';
+import { Copy, Floppy, Gear, InfoCircle, Lock, Pencil, PlusLg, Power, QuestionCircle, Trash, Unlock } from 'react-bootstrap-icons';
 import { MessageModalMode, WICConfig, WICImageFormat, WICProviderType, WICTemplate } from '@/types/common';
 import EditTemplateModal from '@/components/EditTemplateModal';
 import MessageModal from '@/components/MessageModal';
@@ -38,6 +38,7 @@ function App() {
 
   // Naming template related
   const [namingTemplates, setNamingTemplates] = useState<WICTemplate[]>([]);
+  const [isTemplateEditing, setIsTemplateEditing] = useState(false);
   const [templateForEdit, setTemplateForEdit] = useState<WICTemplate | undefined>();
   const [editingTemplateIndex, setEditingTemplateIndex] = useState<number>(-1);
   const [showEditTemplateModal, setShowEditTemplateModal] = useState(false);
@@ -69,16 +70,32 @@ function App() {
     setImageFormat(config.imageFormat);
   }
 
-  const appendNewTemplate = () => {
+  const onAppendNewTemplate = () => {
+    setIsTemplateEditing(false);
     setTemplateForEdit(undefined);
     setEditingTemplateIndex(-1);
     setShowEditTemplateModal(true);
   };
 
-  const editTemplateAtRow = (index: number) => {
+  const onEditTemplateRow = (index: number) => {
+    setIsTemplateEditing(true);
     setTemplateForEdit(namingTemplates[index]);
     setEditingTemplateIndex(index);
     setShowEditTemplateModal(true);
+  };
+
+  const onCopyTemplateRow = (index: number) => {
+    setIsTemplateEditing(false);
+    setTemplateForEdit(namingTemplates[index]);
+    setEditingTemplateIndex(-1);
+    setShowEditTemplateModal(true);
+  };
+
+  const onDeleteTemplateRow = (index: number) => {
+    // Clone existing templates and remove at specified index
+    const updatedTemplates = [...namingTemplates];
+    updatedTemplates.splice(index, 1);
+    setNamingTemplates(updatedTemplates);
   };
 
   const onApplyTemplate = (template: WICTemplate) => {
@@ -386,7 +403,7 @@ function App() {
                 </Form.Group>
               </Tab.Content>
             </Tab>
-            <Tab eventKey="S3" title="(Coming Soon) FileLu S5 / AWS S3" disabled>
+            <Tab eventKey="S3" title="FileLu S5">
               <Tab.Content className="border border-top-0 p-3">
                 <Alert variant="info">
                   <InfoCircle />
@@ -446,12 +463,17 @@ function App() {
                       <tr key={index}>
                         <td>{template.encryption ? <Lock className="text-success" /> : <Unlock />}{template.url}</td>
                         <td className="text-end">
-                          <Button variant="primary" size="sm" className="no-text" title={t("edit")} onClick={() => editTemplateAtRow(index)}>
-                            <Pencil />
-                          </Button>
-                          <Button variant="danger" size="sm" className="no-text" title={t("delete")}>
-                            <Trash />
-                          </Button>
+                          <ButtonGroup size="sm">
+                            <Button variant="outline-primary" title={t("edit")} onClick={() => onEditTemplateRow(index)}>
+                              <Pencil />
+                            </Button>
+                            <Button variant="outline-success" title={t("copy")} onClick={() => onCopyTemplateRow(index)}>
+                              <Copy />
+                            </Button>
+                            <Button variant="outline-danger" title={t("delete")} onClick={() => onDeleteTemplateRow(index)}>
+                              <Trash />
+                            </Button>
+                          </ButtonGroup>
                         </td>
                       </tr>
                     ))}
@@ -465,7 +487,7 @@ function App() {
                   </tfoot>
                 }
               </table>
-              <Button size="sm" variant="outline-primary" onClick={appendNewTemplate}>
+              <Button size="sm" variant="outline-primary" onClick={onAppendNewTemplate}>
                 <PlusLg />
                 {t("add")}
               </Button>
@@ -546,6 +568,7 @@ function App() {
 
     <EditTemplateModal
       show={showEditTemplateModal}
+      isEditing={isTemplateEditing}
       template={templateForEdit}
       onClose={() => { setShowEditTemplateModal(false) }}
       onSave={onApplyTemplate}

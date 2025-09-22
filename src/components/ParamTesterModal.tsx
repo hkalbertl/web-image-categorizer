@@ -31,7 +31,7 @@ const ParamTesterModal: React.FC<ParamTesterModalProps> = ({ show, pattern, isDi
   /**
    * Handle form submit, which is testing the input pattern.
    */
-  const handleSubmit = (e: React.FormEvent) => {
+  const onFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
     resetForm(true);
@@ -117,7 +117,7 @@ const ParamTesterModal: React.FC<ParamTesterModalProps> = ({ show, pattern, isDi
         <Modal.Title>WIC Parameter Tester</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        <Form id="param-test-form" autoComplete="off" noValidate onSubmit={handleSubmit}>
+        <Form id="param-test-form" autoComplete="off" noValidate onSubmit={onFormSubmit}>
           <Form.Group className="mb-3">
             <Form.Label htmlFor="param-test-pattern">{t(isDirMode ? "directoryPattern" : "fileNamePattern")}</Form.Label>
             <Form.Control id="param-test-pattern" type="text" isInvalid={!!testPatternError}

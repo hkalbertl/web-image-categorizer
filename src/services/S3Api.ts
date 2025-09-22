@@ -30,7 +30,33 @@ export default class S3Api implements StorageProvider {
   }
 
   async uploadFile(directory: string, fileName: string, data: Blob): Promise<string> {
-    return '';
+    // Build the path
+    const bodyData = await data.arrayBuffer();
+    let path: string = directory.replace(/[\/]+$/g, '');
+    path += `/${fileName}`;
+    path = path.replace(/^[\/]+/g, '');
+
+    // Create signature and sign the request
+    const signer = this.createSignature();
+    const request = new HttpRequest({
+      protocol: S3Api.S3_PROTOCOL,
+      hostname: this.hostName || S3Api.S3_HOSTNAME,
+      method: 'PUT',
+      path,
+      body: bodyData,
+    });
+    const signed = await signer.sign(request);
+
+    const res = await fetch(`${signed.protocol}//${signed.hostname}${signed.path}`, {
+      method: signed.method,
+      headers: signed.headers,
+      body: bodyData,
+    });
+    if (!res.ok) {
+      const httpResponseText = await res.text();
+      throw new Error(`[Status=${res.status}]: ${httpResponseText}`);
+    }
+    return path;
   }
 
   /**
