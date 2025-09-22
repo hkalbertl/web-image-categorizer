@@ -1,0 +1,56 @@
+.navbar-brand img,
+.nav-link svg,
+.alert svg {
+  margin-right: .2em;
+}
+
+.option-form>.row,
+.tab-content>.row,
+.field-list>div {
+  margin-bottom: 1rem;
+
+  &:last-child {
+    margin-bottom: 0 !important;
+  }
+}
+
+.option-form>.row>div:first-child {
+  font-weight: bold;
+}
+
+.template-table tbody tr td {
+  height: 3em;
+  vertical-align: middle;
+
+  >svg {
+    margin-right: .2em;
+  }
+
+  &.text-end button {
+    margin-left: .2em;
+  }
+}
+
+.modal-secondary {
+  /* Set secondary modal above primary modal */
+  z-index: 1057 !important;
+}
+
+body:has(.modal.show.modal-secondary) .modal-backdrop {
+  /* When secondary modal displayed, adjust all modal backdrop to just below that secondary modal */
+  z-index: 1056 !important;
+}
+
+.modal form {
+  min-height: 16em;
+}
+
+.btn svg,
+.btn .spinner-border {
+  margin-right: .2em;
+}
+
+.btn.no-text svg,
+.template-table tbody .btn-group .btn svg {
+  margin-right: 0;
+}

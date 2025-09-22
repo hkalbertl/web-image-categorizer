@@ -1,0 +1,12 @@
+body {
+  min-width: 120px;
+}
+
+a.text-center {
+  background-color: rgba(var(--bs-tertiary-color-rgb), .1);
+}
+
+.list-group-item img,
+.list-group-item svg {
+  margin-right: .2em;
+}
