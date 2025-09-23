@@ -5,16 +5,14 @@ import { XMLParser } from "fast-xml-parser";
 import { getErrorMessage } from "@/utils/common";
 import StorageProvider from "./StorageProvider";
 
-export default class S3Api implements StorageProvider {
+export default class AwsS3Api implements StorageProvider {
 
   private static readonly S3_PROTOCOL = "https";
-  private static readonly S3_HOSTNAME = "s5lu.com";
-  private static readonly S3_REGION = "global";
 
   constructor(
     private accessId: string,
     private secretKey: string,
-    private hostName?: string,
+    private hostName: string,
     private region?: string,
   ) { }
 
@@ -39,8 +37,8 @@ export default class S3Api implements StorageProvider {
     // Create signature and sign the request
     const signer = this.createSignature();
     const request = new HttpRequest({
-      protocol: S3Api.S3_PROTOCOL,
-      hostname: this.hostName || S3Api.S3_HOSTNAME,
+      protocol: AwsS3Api.S3_PROTOCOL,
+      hostname: this.hostName,
       method: 'PUT',
       path,
       body: bodyData,
@@ -68,7 +66,7 @@ export default class S3Api implements StorageProvider {
         accessKeyId: this.accessId,
         secretAccessKey: this.secretKey,
       },
-      region: this.region || S3Api.S3_REGION,
+      region: this.region || '',
       service: "s3",
       sha256: Sha256,
     });
@@ -85,8 +83,8 @@ export default class S3Api implements StorageProvider {
     // Create signature and sign the request
     const signer = this.createSignature();
     const request = new HttpRequest({
-      protocol: S3Api.S3_PROTOCOL,
-      hostname: this.hostName || S3Api.S3_HOSTNAME,
+      protocol: AwsS3Api.S3_PROTOCOL,
+      hostname: this.hostName,
       method,
       path,
       query,

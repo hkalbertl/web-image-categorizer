@@ -2,11 +2,8 @@ import { Trans, useTranslation } from "react-i18next";
 import { Navbar, Container, NavbarBrand, Form, Button, Alert, Spinner, InputGroup, DropdownButton, Dropdown, Badge } from "react-bootstrap";
 import { CheckLg, ExclamationTriangle, Floppy, Lightbulb, QuestionCircle } from "react-bootstrap-icons";
 import WCipher from "wcipher";
-import { ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY } from "@/constants/common";
-import { configBsTheme, loadConfig, dataUrlToArrayBuffer, encodeImage, getExtName, toDisplaySize, isValidForFileName, normalizeDirectoryPath } from "@/utils/common";
-import FileLuApi from "@/services/FileLuApi";
-import S3Api from "@/services/S3Api";
-import StorageProvider from "@/services/StorageProvider";
+import { ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY, SUPPORT_PROVIDER_TYPES } from "@/constants/common";
+import { configBsTheme, loadConfig, initApiClient, dataUrlToArrayBuffer, encodeImage, getExtName, toDisplaySize, isValidForFileName, normalizeDirectoryPath } from "@/utils/common";
 
 import '../../../node_modules/bootstrap/dist/css/bootstrap.min.css';
 import './App.scss';
@@ -81,11 +78,17 @@ function App() {
     resetLayout();
     // Load config
     loadConfig().then(config => {
-      if (config && config.provider) {
+      if (config && config.provider && config.provider.type) {
         // Config loaded
-        setNavbarProvider(config.provider.type);
-        // Show the usage tips
-        setShowUsageTips(true);
+        const targetProviderType = config.provider.type,
+          targetProviderEntry = SUPPORT_PROVIDER_TYPES.find(p => p.type === targetProviderType);
+        if (targetProviderEntry) {
+          setNavbarProvider(targetProviderEntry.display);
+          // Show the usage tips
+          setShowUsageTips(true);
+        } else {
+          console.warn('Config loaded but provider is not supported!?');
+        }
       } else {
         // Show the setup tips
         setShowSetupTips(true);
@@ -249,15 +252,8 @@ function App() {
     }
 
     // Check storage provider
-    let api: StorageProvider | null = null;
     const appConfig = await loadConfig();
-    if (appConfig.provider) {
-      if ('FileLu' === appConfig.provider.type && appConfig.provider.apiKey) {
-        api = new FileLuApi(appConfig.provider.apiKey);
-      } else if ('S3' === appConfig.provider.type && appConfig.provider.accessId && appConfig.provider.secretKey) {
-        api = new S3Api(appConfig.provider.accessId, appConfig.provider.secretKey);
-      }
-    }
+    const api = initApiClient(appConfig.provider);
     if (!api) {
       // Unknown provider
       setErrorMessage(t("invalidProviderOptions") + (appConfig.provider?.type || 'Unknown'));

@@ -18,6 +18,8 @@ export interface WICProvider {
   apiKey?: string;
   accessId?: string;
   secretKey?: string;
+  hostName?: string;
+  region?: string;
 }
 
 export interface BaseEntry {
@@ -43,7 +45,7 @@ export interface WICImageData {
   fileName?: string;
 }
 
-export type WICProviderType = 'FileLu' | 'S3';
+export type WICProviderType = 'FileLu' | 'FileLuS5' | 'AwsS3';
 
 export type WICImageFormat = 'image/jpeg' | 'image/png' | 'image/webp';
 

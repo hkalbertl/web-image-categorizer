@@ -1,11 +1,8 @@
 import i18n from "../i18n";
 import WCipher from "wcipher";
-import { loadConfig, sleep, toDisplaySize, matchTemplate, getErrorMessage, openSidebar, arrayBufferToDataUrl } from "@/utils/common";
+import { loadConfig, initApiClient, sleep, toDisplaySize, matchTemplate, getErrorMessage, openSidebar, arrayBufferToDataUrl } from "@/utils/common";
 import { DEFAULT_CONFIG, ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY } from '@/constants/common';
 import { WICConfig, WICImageData } from "@/types/common";
-import StorageProvider from "@/services/StorageProvider";
-import FileLuApi from "@/services/FileLuApi";
-import S3Api from "@/services/S3Api";
 
 export default defineBackground(() => {
   // Write a log message to indicate the service worker is starting
@@ -184,12 +181,7 @@ export default defineBackground(() => {
         });
       } else {
         // Upload to storage provider
-        let api: StorageProvider | null = null;
-        if ('FileLu' === appConfig.provider.type && appConfig.provider.apiKey) {
-          api = new FileLuApi(appConfig.provider.apiKey);
-        } else if ('S3' === appConfig.provider.type && appConfig.provider.accessId && appConfig.provider.secretKey) {
-          api = new S3Api(appConfig.provider.accessId, appConfig.provider.secretKey);
-        }
+        const api = initApiClient(appConfig.provider);
         if (!api) {
           // Unknown provider
           throw new Error(i18n.t("invalidProviderOptions") + appConfig.provider.type);

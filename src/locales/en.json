@@ -65,5 +65,11 @@
   "imageJpg": ".JPG (The most common image format)",
   "imagePng": ".PNG (Lossless compression but larger file size)",
   "imageWebp": ".WEBP (Modern image format developed by Google)",
-  "optionsLoadedAndChooseProvider": "Configuration loaded successfully. Please select a provider and enter your API keys to complete setup."
+  "optionsLoadedAndChooseProvider": "Configuration loaded successfully. Please select a provider and enter your API keys to complete setup.",
+  "providerTypeFileLu": "FileLu API",
+  "providerTypeFileLuS5": "FileLu S5",
+  "providerTypeAwsS3": "AWS S3 Compatible",
+  "hostName": "Host Name",
+  "region": "Region",
+  "regionPlaceholder": "Optional, only needed if your S3 provider requires it"
 }

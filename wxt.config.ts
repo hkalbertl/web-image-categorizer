@@ -8,8 +8,7 @@ export default defineConfig({
     return {
       name: "Web Image Categorizer",
       short_name: "WIC",
-      description: "Save images from webpages to FileLu using custom naming templates.",
-      permissions: ["activeTab", "storage", "contextMenus", "notifications", "downloads"],
+      permissions: ["activeTab", "storage", "contextMenus", "notifications"],
       host_permissions: [
         "*://*/*"
       ],

@@ -1,9 +1,13 @@
 import dayjs from 'dayjs';
 import mime from 'mime';
 import { isMatch } from 'matcher';
-import { WICConfig, WICTemplate, WICMatchResult } from '../types/common'
+import { WICConfig, WICTemplate, WICMatchResult, WICProvider } from '../types/common'
 import { DEFAULT_CONFIG } from '@/constants/common';
 import i18n from '@/i18n';
+import StorageProvider from '@/services/StorageProvider';
+import FileLuApi from '@/services/FileLuApi';
+import AwsS3Api from '@/services/AwsS3Api';
+import FileLuS5Api from '@/services/FileLuS5Api';
 
 /**
  * The date/time format for `now`.
@@ -34,6 +38,19 @@ export const loadConfig = async (): Promise<WICConfig> => {
   }
   return config;
 };
+
+export const initApiClient = (provider?: WICProvider): StorageProvider | undefined => {
+  if (provider && provider.type) {
+    if ('FileLu' === provider.type && provider.apiKey) {
+      return new FileLuApi(provider.apiKey);
+    } else if ('FileLuS5' === provider.type && provider.accessId && provider.secretKey) {
+      return new FileLuS5Api(provider.accessId, provider.secretKey);
+    } else if ('AwsS3' === provider.type && provider.accessId && provider.secretKey && provider.hostName) {
+      return new AwsS3Api(provider.accessId, provider.secretKey, provider.hostName, provider.region);
+    }
+  }
+  return undefined;
+}
 
 /**
    * Check client browser setting and apply dark theme when needed.
