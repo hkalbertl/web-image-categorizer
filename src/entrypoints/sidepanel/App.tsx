@@ -377,7 +377,7 @@ function App() {
         </Alert>
       }
       {previewImageUrl &&
-        <div>
+        <div className="mb-3">
           <div id="cloud-image-container" className="mb-3">
             <img id="cloud-image" alt="" src={previewImageUrl} />
           </div>
@@ -427,12 +427,9 @@ function App() {
                 </InputGroup>
               </Form.Group>
               <Form.Check
-                type="switch"
-                id="cloud-file-encryption"
-                label="Use client-side encryption"
-                className="mb-3"
-                disabled={!allowEncryption}
-                checked={useEncryption}
+                type="switch" id="cloud-file-encryption" label="Use client-side encryption" className="mb-3"
+                title={allowEncryption ? undefined : t("encryptionNotAvailableTooltip")}
+                disabled={!allowEncryption} checked={useEncryption}
                 onChange={e => setUseEncryption(e.currentTarget.checked)}
               />
               <Button type="submit" variant="primary" disabled={isSaving}>

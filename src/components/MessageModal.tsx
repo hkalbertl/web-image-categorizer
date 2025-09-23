@@ -4,18 +4,17 @@ import { CheckLg, ExclamationTriangle } from "react-bootstrap-icons";
 import { MessageModalMode } from "@/types/common";
 
 interface MessageModalProps {
-  show: boolean;
   mode: MessageModalMode,
   message?: string;
   onClose: () => void;
 }
 
-const MessageModal: React.FC<MessageModalProps> = ({ show, mode, message, onClose }) => {
+const MessageModal: React.FC<MessageModalProps> = ({ mode, message, onClose }) => {
 
   const { t } = useTranslation();
 
   return (
-    <Modal backdrop="static" show={show} onHide={onClose} centered>
+    <Modal backdrop="static" show={'hidden' !== mode} onHide={onClose} centered>
       {'progress' !== mode &&
         <Modal.Header closeButton>
           <Modal.Title>{t("appName")}</Modal.Title>

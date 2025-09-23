@@ -9,6 +9,9 @@ export default class AwsS3Api implements StorageProvider {
 
   private static readonly S3_PROTOCOL = "https";
 
+  /**
+   * Create new AWS S3 API client.
+   */
   constructor(
     private accessId: string,
     private secretKey: string,
@@ -28,14 +31,18 @@ export default class AwsS3Api implements StorageProvider {
   }
 
   async uploadFile(directory: string, fileName: string, data: Blob): Promise<string> {
-    // Build the path
-    const bodyData = await data.arrayBuffer();
+    // Build the path, removing the tail slashes
+    // For AWS S3, the immedicate directory at root directory is the bucket name
     let path: string = directory.replace(/[\/]+$/g, '');
+    // Append file name at the end of path
     path += `/${fileName}`;
+    // Remove the head slash(es)
     path = path.replace(/^[\/]+/g, '');
+    // The final path should be something like: bucket-name/path/to/directory/filename.jpg
 
     // Create signature and sign the request
     const signer = this.createSignature();
+    const bodyData = await data.arrayBuffer();
     const request = new HttpRequest({
       protocol: AwsS3Api.S3_PROTOCOL,
       hostname: this.hostName,
@@ -45,14 +52,16 @@ export default class AwsS3Api implements StorageProvider {
     });
     const signed = await signer.sign(request);
 
+    // Send the request with signed headers
     const res = await fetch(`${signed.protocol}//${signed.hostname}${signed.path}`, {
       method: signed.method,
       headers: signed.headers,
-      body: bodyData,
+      body: signed.body,
     });
     if (!res.ok) {
-      const httpResponseText = await res.text();
-      throw new Error(`[Status=${res.status}]: ${httpResponseText}`);
+      // Try to extract the error message in response content
+      const rawContent = await res.text(), xmlError = this.extractXmlError(rawContent);
+      throw new Error(`[Status=${res.status}]: ${xmlError || rawContent}`);
     }
     return path;
   }
@@ -110,12 +119,41 @@ export default class AwsS3Api implements StorageProvider {
     return await this.makeSignedRequest("/", { "x-id": "ListBuckets" });
   };
 
-  listBuckets = async (): Promise<string[]> => {
+  /**
+   * List all available buckets.
+   * @returns The bucket names as string array.
+   */
+  listBuckets = async (): Promise<string[] | undefined> => {
     const res = await this.makeListBucketsRequest();
-    const rawXml = await res.text();
-    const parser = new XMLParser();
-    const result = parser.parse(rawXml);
-    const buckets = result?.ListAllMyBucketsResult?.Buckets?.Bucket || [];
-    return Array.isArray(buckets) ? buckets.map((b) => b.Name) : [buckets.Name];
+    const rawContent = await res.text();
+    if (res.ok) {
+      // Response OK! Parse XML content
+      const parser = new XMLParser();
+      const result = parser.parse(rawContent);
+      const buckets = result?.ListAllMyBucketsResult?.Buckets?.Bucket || [];
+      return Array.isArray(buckets) ? buckets.map((b) => b.Name) : [buckets.Name];
+    } else {
+      // Try to extract the error message in response content
+      const xmlError = this.extractXmlError(rawContent);
+      throw new Error(`[Status=${res.status}]: ${xmlError || rawContent}`);
+    }
+  };
+
+  /**
+   * Extract the error message from AWS S3 response.
+   * @param rawXml AWS S3 response XML.
+   * @returns The extracted error message, or undefined when failed.
+   */
+  private extractXmlError = (rawXml: string): string | undefined => {
+    try {
+      const parser = new XMLParser({ ignoreDeclaration: true });
+      const parsed = parser.parse(rawXml);
+      if (parsed?.Error?.Message) {
+        return parsed?.Error?.Message as string;
+      }
+    } catch (ex) {
+      console.error(`Failed to extract XML error: ${getErrorMessage(ex)}`);
+    }
+    return undefined;
   };
 }

@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import mime from 'mime';
 import { isMatch } from 'matcher';
 import { WICConfig, WICTemplate, WICMatchResult, WICProvider } from '../types/common'
-import { DEFAULT_CONFIG } from '@/constants/common';
+import { DEFAULT_CONFIG, SUPPORT_IMAGE_TYPES, SUPPORT_PROVIDER_TYPES } from '@/constants/common';
 import i18n from '@/i18n';
 import StorageProvider from '@/services/StorageProvider';
 import FileLuApi from '@/services/FileLuApi';
@@ -39,6 +39,11 @@ export const loadConfig = async (): Promise<WICConfig> => {
   return config;
 };
 
+/**
+ * Initialize API client by specified provider configuration.
+ * @param provider Provider configuration.
+ * @returns Initialized API client object.
+ */
 export const initApiClient = (provider?: WICProvider): StorageProvider | undefined => {
   if (provider && provider.type) {
     if ('FileLu' === provider.type && provider.apiKey) {
@@ -114,13 +119,15 @@ export const getNowString = () => {
  * Match referrer with templates and generate destination directory and file name.
  * @param templates WIC naming templates.
  * @param referrer The URL contain target image.
+ * @param pageTitle The title of the source webpage.
  * @param imageFormat The content type of image, such as `image/jpeg`.
  * @returns The generated directory and file name.
  */
 export const matchTemplate = (templates: WICTemplate[] | null, referrer: string, pageTitle: string, imageFormat?: string) => {
   // Define parameter values
-  const now = dayjs(), refUrl = new URL(referrer);
-  const extName = getExtName(imageFormat);
+  const now = dayjs(),
+    refUrl = new URL(referrer),
+    extName = getExtName(imageFormat);
 
   // Define the replace function
   const replaceFunc = (input: string) => {
@@ -297,6 +304,12 @@ export const isValidForFileName = (input: string): boolean => {
   return false;
 };
 
+/**
+ * Validate the input of directory / file name WIC parameter.
+ * @param input Input value.
+ * @param isDirectory The input value is used for directory or not.
+ * @returns Return null when the input value is valid. Otherwise, error message will be returned.
+ */
 export const validateTemplateInput = (input: string, isDirectory: boolean): string | null => {
   let itemError: string | null = null;
   // Check for directory path start character
@@ -367,7 +380,6 @@ export const getErrorMessage = (ex: unknown): string => {
   return `${ex}`;
 };
 
-
 /**
  * Open side panel (or sidebar for Firefox) to allow user for editing image name / path before saving.
  * @param windowId
@@ -398,18 +410,24 @@ export const openSidebar = async (windowId: number) => {
   });
 };
 
+/**
+ * Convert array buffer to data URL.
+ */
 export const arrayBufferToDataUrl = async (buffer: ArrayBuffer, mimeType: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const blob = new Blob([buffer], { type: mimeType });
     const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string); // full data URL
+    reader.onloadend = () => resolve(reader.result as string);
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
 };
 
+/**
+ * Convert data URL backt array buffer.
+ */
 export const dataUrlToArrayBuffer = (dataUrl: string): ArrayBuffer => {
-  const base64 = dataUrl.split(",")[1]; // strip prefix
+  const base64 = dataUrl.split(",")[1];
   const binary = atob(base64);
   const len = binary.length;
   const bytes = new Uint8Array(len);
@@ -467,3 +485,93 @@ export const normalizeDirectoryPath = (directoryPath: string): string => {
   }
   return '';
 }
+
+/**
+ * Check the source value is numeric and fall within specified range.
+ * @param source The source number.
+ * @param lowerBound The inclusive lower bound.
+ * @param upperBound The inclusive upper bound.
+ * @returns Return true if the source value is within the range.
+ */
+export const isInRange = (source: number, lowerBound: number, upperBound: number): boolean => {
+  if ('number' === typeof source && isFinite(source) && !isNaN(source)
+    && lowerBound <= source && upperBound >= source) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Validate the imported JSON provided by user.
+ * @param rawJson JSON object provided by user.
+ * @returns The validated and filled WICConfig.
+ */
+export const validateImportConfig = (rawJson: any): WICConfig => {
+  const importConfig: WICConfig = { ...DEFAULT_CONFIG };
+  if (!isInRange(rawJson.version, 1, 1)) {
+    // Missing or unknown version
+    throw new Error('Missing or unknown version.');
+  }
+
+  if (!rawJson.provider || 'object' !== typeof rawJson.provider || 'string' !== typeof rawJson.provider.type
+    || !SUPPORT_PROVIDER_TYPES.some(provider => provider.type === rawJson.provider.type)) {
+    // Missing or unknown provider type
+    throw new Error('Missing or unknown provider type.');
+  }
+  importConfig.provider = {
+    type: rawJson.provider.type,
+    hostName: rawJson.provider.hostName,
+    region: rawJson.provider.region,
+  };
+
+  // Validate templates
+  if (rawJson.templates) {
+    if (!Array.isArray(rawJson.templates)) {
+      // Non array templates detected
+      throw new Error('Unknown templates.');
+    } else if (rawJson.templates.length) {
+      importConfig.templates = [];
+      for (const item of rawJson.templates) {
+        if (!item.url || 'string' !== typeof item.url || 0 === item.url.length) {
+          throw new Error('Missing or unknown template URL.');
+        }
+        if (item.directory && 'string' !== typeof item.directory) {
+          throw new Error('Unknown template directory.');
+        }
+        if (item.fileName && 'string' !== typeof item.fileName) {
+          throw new Error('Unknown template file name.');
+        }
+        if ('boolean' !== typeof item.encryption) {
+          throw new Error('Unknown template encryption.');
+        }
+        importConfig.templates.push({
+          url: item.url,
+          directory: item.directory || undefined,
+          fileName: item.fileName || undefined,
+          encryption: item.encryption || false,
+        } as WICTemplate);
+      }
+    }
+  }
+
+  if (!isInRange(rawJson.sidebarMode, 0, 1)) {
+    throw new Error('Missing or unknown sidebar mode.');
+  }
+  importConfig.sidebarMode = rawJson.sidebarMode;
+
+  if (0 === importConfig.sidebarMode) {
+    if (!isInRange(rawJson.sidebarMode, 1, 4)) {
+      throw new Error('Missing or unknown notification level.');
+    }
+    importConfig.notificationLevel = rawJson.notificationLevel;
+  }
+
+  if (!rawJson.imageFormat || 'string' !== typeof rawJson.imageFormat
+    || !SUPPORT_IMAGE_TYPES.some(im => im.mime === rawJson.imageFormat)) {
+    throw new Error('Missing or unknown template image format.');
+  }
+  importConfig.imageFormat = rawJson.imageFormat;
+
+  // Config is valid
+  return importConfig;
+};

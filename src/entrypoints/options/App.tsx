@@ -1,15 +1,16 @@
 import { useTranslation, Trans } from 'react-i18next';
-import { Button, ButtonGroup, Card, Col, Container, Dropdown, DropdownButton, Form, Nav, Navbar, NavbarBrand, Row, Tab, Tabs } from 'react-bootstrap';
-import { Copy, Floppy, Gear, Lock, Pencil, PlusLg, Power, QuestionCircle, Trash, Unlock } from 'react-bootstrap-icons';
+import { Button, Col, Container, Dropdown, DropdownButton, Form, Nav, Navbar, NavbarBrand, Row, Tab, Tabs } from 'react-bootstrap';
+import { Floppy, Gear, Power, QuestionCircle } from 'react-bootstrap-icons';
 import { MessageModalMode, WICConfig, WICImageFormat, WICProvider, WICProviderType, WICTemplate } from '@/types/common';
-import { configBsTheme, getErrorMessage, loadConfig, openSidebar, getNowString, sleep } from '@/utils/common';
+import { configBsTheme, getErrorMessage, loadConfig, openSidebar, getNowString, validateImportConfig } from '@/utils/common';
 import { DEFAULT_CONFIG, SUPPORT_IMAGE_TYPES, SUPPORT_PROVIDER_TYPES } from '@/constants/common';
-import EditTemplateModal from '@/components/EditTemplateModal';
-import MessageModal from '@/components/MessageModal';
-import PasswordField from '@/components/PasswordField';
 import { FileLuForm, FileLuFormRef } from '@/components/FileLuForm';
 import { FileLuS5Form, FileLuS5FormRef } from '@/components/FileLuS5Form';
 import { AwsS3Form, AwsS3FormRef } from '@/components/AwsS3Form';
+import EditTemplateTable from '@/components/EditTemplateTable';
+import EditTemplateModal from '@/components/EditTemplateModal';
+import MessageModal from '@/components/MessageModal';
+import PasswordField from '@/components/PasswordField';
 
 import '../../../node_modules/bootstrap/dist/css/bootstrap.min.css';
 import './App.scss';
@@ -26,6 +27,7 @@ function App() {
   const [notificationLevel, setNotificationLevel] = useState(4);
   const [imageFormat, setImageFormat] = useState<WICImageFormat>(SUPPORT_IMAGE_TYPES[0].mime);
   const importInputRef = useRef<HTMLInputElement | null>(null);
+  const exportAnchorRef = useRef<HTMLAnchorElement | null>(null);
 
   // Form ref
   const fileLuFormRef = useRef<FileLuFormRef>(null);
@@ -40,8 +42,7 @@ function App() {
   const [showEditTemplateModal, setShowEditTemplateModal] = useState(false);
 
   // Message modal
-  const [showMsgModal, setShowMsgModal] = useState(false);
-  const [msgModalMode, setMsgModalMode] = useState<MessageModalMode>('progress');
+  const [msgModalMode, setMsgModalMode] = useState<MessageModalMode>('hidden');
   const [msgModalText, setMsgModalText] = useState<string>();
 
   /**
@@ -92,13 +93,6 @@ function App() {
     setShowEditTemplateModal(true);
   };
 
-  const onDeleteTemplateRow = (index: number) => {
-    // Clone existing templates and remove at specified index
-    const updatedTemplates = [...namingTemplates];
-    updatedTemplates.splice(index, 1);
-    setNamingTemplates(updatedTemplates);
-  };
-
   const onApplyTemplate = (template: WICTemplate) => {
     // Close modal
     setShowEditTemplateModal(false);
@@ -142,16 +136,15 @@ function App() {
     config.imageFormat = imageFormat;
 
     // Show loading
-    setMsgModalMode("progress");
     setMsgModalText(t("validatingOptions"));
-    setShowMsgModal(true);
+    setMsgModalMode("progress");
 
     // Initialize storage provider
     const api = initApiClient(config.provider);
     if (!api) {
       // Unknown provider??
-      setMsgModalMode("failed");
       setMsgModalText(t("unknownProviderType") + config.provider.type);
+      setMsgModalMode("failed");
       return false;
     }
 
@@ -165,134 +158,70 @@ function App() {
       if (success) {
         // Valid config, save to storage
         browser.storage.sync.set(config);
-        setMsgModalMode("success");
         setMsgModalText(t("optionsSaved"));
+        setMsgModalMode("success");
       } else {
         // Invalid credentials
-        setMsgModalMode("failed");
         setMsgModalText(t("invalidCredentials"));
+        setMsgModalMode("failed");
       }
     }).catch(err => {
       // Unhandled error
-      setMsgModalMode("failed");
       setMsgModalText(getErrorMessage(err));
+      setMsgModalMode("failed");
     });
     return false;
   };
 
-  const onExport = async () => {
-    try {
-      // Load saved config
-      const savedConfig = await loadConfig();
+  const onExport = () => {
+    // Load saved config
+    loadConfig().then(config => {
       // Prepare export config content
-      const exportConfig = {
-        version: 1,
-        ...savedConfig,
-      };
-      if (savedConfig.provider) {
-        // Just keep the provider type
+      const exportConfig = { version: 1, ...config };
+      if (config.provider) {
+        // Just keep the provider's non-sensitive properties
         exportConfig.provider = {
-          type: savedConfig.provider.type
+          type: config.provider.type,
+          hostName: config.provider.hostName,
+          region: config.provider.region,
         };
       }
       // Remove password
       delete exportConfig.wcipherPassword;
       // Prepare export JSON
       const exportJson = JSON.stringify(exportConfig);
-      // Trigger download by adding a dynamic anchor element
-      const anchor = document.createElement('a');
-      anchor.href = `data:application/json;charset=utf-8,${encodeURIComponent(exportJson)}`;
-      anchor.download = `wic-options-${getNowString()}.json`;
-      anchor.classList.add('d-none');
-      anchor.click();
-      // Remove anchor after a short delay
-      await sleep(100);
-      anchor.remove();
-    } catch (ex) {
-      console.error(`Failed to export options: ${getErrorMessage(ex)}`);
-    }
+      // Trigger download
+      if (exportAnchorRef.current) {
+        exportAnchorRef.current.href = `data:application/json;charset=utf-8,${encodeURIComponent(exportJson)}`;
+        exportAnchorRef.current.download = `wic-options-${getNowString()}.json`;
+        exportAnchorRef.current.click();
+      }
+    }).catch(err => {
+      console.error(`Failed to export options: ${getErrorMessage(err)}`);
+    });
+  };
+
+  const onShowImportDialog = () => {
+    if (!importInputRef.current) return;
+    importInputRef.current.value = '';
+    importInputRef.current.click();
   };
 
   const onImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
 
-    setMsgModalMode('progress');
     setMsgModalText(t("validatingOptionsFile"));
-    setShowMsgModal(true);
+    setMsgModalMode('progress');
     try {
       // Prepare config variable and read the input file
-      const importConfig: WICConfig = { ...DEFAULT_CONFIG };
       const rawText = await selectedFile.text();
-      const rawJson = JSON.parse(rawText);
-
-      if (!rawJson.version || !isFinite(rawJson.version) || isNaN(rawJson.version) || 1 !== +rawJson.version) {
-        // Missing or unknown version
-        throw new Error('Missing or unknown version.');
-      }
-
-      if (!rawJson.provider || 'object' !== typeof rawJson.provider || 'string' !== typeof rawJson.provider.type
-        || !SUPPORT_PROVIDER_TYPES.some(provider => provider.type === rawJson.provider.type)) {
-        // Missing or unknown provider type
-        throw new Error('Missing or unknown provider type.');
-      }
-      importConfig.provider = {
-        type: rawJson.provider.type
-      };
-
-      // Validate templates
-      if (rawJson.templates) {
-        if (!Array.isArray(rawJson.templates)) {
-          // Non array templates detected
-          throw new Error('Unknown templates.');
-        } else if (rawJson.templates.length) {
-          importConfig.templates = [];
-          for (const item of rawJson.templates) {
-            if (!item.url || 'string' !== typeof item.url || 0 === item.url.length) {
-              throw new Error('Missing or unknown template URL.');
-            }
-            if (item.directory && 'string' !== typeof item.directory) {
-              throw new Error('Unknown template directory.');
-            }
-            if (item.fileName && 'string' !== typeof item.fileName) {
-              throw new Error('Unknown template file name.');
-            }
-            if ('boolean' !== typeof item.encryption) {
-              throw new Error('Unknown template encryption.');
-            }
-            importConfig.templates.push({
-              url: item.url,
-              directory: item.directory || undefined,
-              fileName: item.fileName || undefined,
-              encryption: item.encryption || false,
-            } as WICTemplate);
-          }
-        }
-      }
-
-      if ('number' !== typeof rawJson.sidebarMode || 0 > rawJson.sidebarMode || 1 < rawJson.sidebarMode) {
-        throw new Error('Missing or unknown sidebar mode.');
-      }
-      importConfig.sidebarMode = rawJson.sidebarMode;
-
-      if (0 === importConfig.sidebarMode) {
-        if ('number' !== typeof rawJson.notificationLevel || 0 > rawJson.notificationLevel || 4 < rawJson.notificationLevel) {
-          throw new Error('Missing or unknown notification level.');
-        }
-        importConfig.notificationLevel = rawJson.notificationLevel;
-      }
-
-      if (!rawJson.imageFormat || 'string' !== typeof rawJson.imageFormat
-        || !SUPPORT_IMAGE_TYPES.some(im => im.mime === rawJson.imageFormat)) {
-        throw new Error('Missing or unknown template image format.');
-      }
-      importConfig.imageFormat = rawJson.imageFormat;
-
+      const rawJson = JSON.parse(rawText),
+        importConfig = validateImportConfig(rawJson);
       // Config valid!
       applyConfigOnScreen(importConfig);
       setMsgModalText(t("optionsLoadedAndChooseProvider"));
       setMsgModalMode('success');
-
     } catch (ex) {
       console.error('Failed to import: ', ex);
       setMsgModalText(t("failedToImportOptions") + getErrorMessage(ex));
@@ -338,8 +267,8 @@ function App() {
           <img alt={t("appShortName")} src="icon/32.png" width="30" className="d-inline-block align-top" />
           {t("appName")}
         </NavbarBrand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
+        <Navbar.Toggle aria-controls="navbar-nav" />
+        <Navbar.Collapse id="navbar-nav">
           <Nav className="ms-auto">
             <Nav.Link href="https://github.com/hkalbertl/web-image-categorizer/wiki" target="_blank">
               <QuestionCircle />
@@ -357,8 +286,8 @@ function App() {
           <Tabs id="storage-provider" defaultActiveKey={providerType} activeKey={providerType}
             onSelect={selected => setProviderType(selected as WICProviderType)}
           >
-            {SUPPORT_PROVIDER_TYPES.map(provider => (
-              <Tab eventKey={provider.type} title={provider.display}>
+            {SUPPORT_PROVIDER_TYPES.map((provider, index) => (
+              <Tab key={index} eventKey={provider.type} title={provider.display}>
                 <Tab.Content className="border border-top-0 p-3">
                   {'FileLu' === provider.type && <FileLuForm ref={fileLuFormRef} />}
                   {'FileLuS5' === provider.type && <FileLuS5Form ref={fileLuS5FormRef} />}
@@ -387,50 +316,11 @@ function App() {
       <Row>
         <Col sm="2" md="3" className="pb-3 pb-sm-0">{t("namingTemplates")}</Col>
         <Col sm="10" md="9">
-          <Card>
-            <Card.Body>
-              <table className="table table-hover template-table">
-                <thead>
-                  <tr>
-                    <td colSpan={2}>{t("urls")}</td>
-                  </tr>
-                </thead>
-                {0 !== namingTemplates.length &&
-                  <tbody>
-                    {namingTemplates.map((template, index) => (
-                      <tr key={index}>
-                        <td>{template.encryption ? <Lock className="text-success" /> : <Unlock />}{template.url}</td>
-                        <td className="text-end">
-                          <ButtonGroup size="sm">
-                            <Button variant="outline-primary" title={t("edit")} onClick={() => onEditTemplateRow(index)}>
-                              <Pencil />
-                            </Button>
-                            <Button variant="outline-success" title={t("copy")} onClick={() => onCopyTemplateRow(index)}>
-                              <Copy />
-                            </Button>
-                            <Button variant="outline-danger" title={t("delete")} onClick={() => onDeleteTemplateRow(index)}>
-                              <Trash />
-                            </Button>
-                          </ButtonGroup>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                }
-                {0 === namingTemplates.length &&
-                  <tfoot>
-                    <tr>
-                      <td className="text-center fst-italic" colSpan={2}>({t("noRecords")})</td>
-                    </tr>
-                  </tfoot>
-                }
-              </table>
-              <Button size="sm" variant="outline-primary" onClick={onAppendNewTemplate}>
-                <PlusLg />
-                {t("add")}
-              </Button>
-            </Card.Body>
-          </Card>
+          <EditTemplateTable
+            namingTemplates={namingTemplates}
+            setNamingTemplates={setNamingTemplates} onAppendNewTemplate={onAppendNewTemplate}
+            onEditTemplateRow={onEditTemplateRow} onCopyTemplateRow={onCopyTemplateRow}
+          />
         </Col>
       </Row>
       <Row>
@@ -475,19 +365,12 @@ function App() {
               <Floppy />
               {t("save")}
             </Button>
-            <input
-              type="file"
-              accept="application/json"
-              ref={importInputRef}
-              onChange={onImport}
-              className="d-none"
-            />
+            <input type="file" className="d-none" accept="application/json"
+              ref={importInputRef} onChange={onImport} />
+            <a className="d-none" ref={exportAnchorRef}></a>
             <DropdownButton variant="outline-secondary" title={<><Gear />{t("options")}</>} align="end">
-              <Dropdown.Item onClick={() => {
-                importInputRef.current!.value = '';
-                importInputRef.current!.click();
-              }}>Import from file</Dropdown.Item>
-              <Dropdown.Item onClick={onExport}>Export to file, excluded API keys / secrets</Dropdown.Item>
+              <Dropdown.Item onClick={onShowImportDialog}>{t("importOptions")}</Dropdown.Item>
+              <Dropdown.Item onClick={onExport}>{t("exportOptions")}</Dropdown.Item>
             </DropdownButton>
             <Button variant="outline-danger" onClick={onReset}>
               <Power />
@@ -498,20 +381,11 @@ function App() {
       </Row>
     </Form>
 
-    <EditTemplateModal
-      show={showEditTemplateModal}
-      isEditing={isTemplateEditing}
-      template={templateForEdit}
-      onClose={() => { setShowEditTemplateModal(false) }}
-      onSave={onApplyTemplate}
-    />
+    <EditTemplateModal show={showEditTemplateModal} isEditing={isTemplateEditing} template={templateForEdit}
+      onClose={() => { setShowEditTemplateModal(false) }} onSave={onApplyTemplate} />
 
-    <MessageModal
-      show={showMsgModal}
-      mode={msgModalMode}
-      message={msgModalText}
-      onClose={() => setShowMsgModal(false)}
-    />
+    <MessageModal mode={msgModalMode} message={msgModalText}
+      onClose={() => setMsgModalMode('hidden')} />
   </>);
 }
 
