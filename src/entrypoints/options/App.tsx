@@ -1,12 +1,15 @@
 import { useTranslation, Trans } from 'react-i18next';
-import { Button, ButtonGroup, Card, Col, Container, Dropdown, DropdownButton, Form, InputGroup, Nav, Navbar, NavbarBrand, Row, Tab, Tabs } from 'react-bootstrap';
+import { Button, ButtonGroup, Card, Col, Container, Dropdown, DropdownButton, Form, Nav, Navbar, NavbarBrand, Row, Tab, Tabs } from 'react-bootstrap';
 import { Copy, Floppy, Gear, Lock, Pencil, PlusLg, Power, QuestionCircle, Trash, Unlock } from 'react-bootstrap-icons';
 import { MessageModalMode, WICConfig, WICImageFormat, WICProvider, WICProviderType, WICTemplate } from '@/types/common';
 import { configBsTheme, getErrorMessage, loadConfig, openSidebar, getNowString, sleep } from '@/utils/common';
-import { DEFAULT_CONFIG, SUPPORT_IMAGE_TYPES } from '@/constants/common';
+import { DEFAULT_CONFIG, SUPPORT_IMAGE_TYPES, SUPPORT_PROVIDER_TYPES } from '@/constants/common';
 import EditTemplateModal from '@/components/EditTemplateModal';
 import MessageModal from '@/components/MessageModal';
 import PasswordField from '@/components/PasswordField';
+import { FileLuForm, FileLuFormRef } from '@/components/FileLuForm';
+import { FileLuS5Form, FileLuS5FormRef } from '@/components/FileLuS5Form';
+import { AwsS3Form, AwsS3FormRef } from '@/components/AwsS3Form';
 
 import '../../../node_modules/bootstrap/dist/css/bootstrap.min.css';
 import './App.scss';
@@ -15,30 +18,19 @@ function App() {
 
   const { t } = useTranslation();
 
-  const [windowId, setWindowId] = useState(0);
-  const importInputRef = useRef<HTMLInputElement | null>(null);
-
   // On screen input binding
-  const [providerType, setProviderType] = useState<WICProviderType>('FileLu');
-  const [fileLuApiKey, setFileLuApiKey] = useState<string>('');
-  const [fileLuS5AccessId, setFileLuS5AccessId] = useState<string>('');
-  const [fileLuS5SecretKey, setFileLuS5SecretKey] = useState<string>('');
-  const [awsS3AccessId, setAwsS3AccessId] = useState<string>('');
-  const [awsS3SecretKey, setAwsS3SecretKey] = useState<string>('');
-  const [awsS3HostName, setAwsS3HostName] = useState<string>('');
-  const [awsS3Region, setAwsS3Region] = useState<string>('');
+  const [windowId, setWindowId] = useState(0);
+  const [providerType, setProviderType] = useState<WICProviderType>(SUPPORT_PROVIDER_TYPES[0].type);
   const [encPassword, setEncPassword] = useState<string>('');
   const [sidebarMode, setSidebarMode] = useState(0);
   const [notificationLevel, setNotificationLevel] = useState(4);
   const [imageFormat, setImageFormat] = useState<WICImageFormat>(SUPPORT_IMAGE_TYPES[0].mime);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Validation related
-  const [fileLuApiKeyError, setFileLuApiKeyError] = useState<string | undefined>();
-  const [fileLuS5AccessIdError, setFileLuS5AccessIdError] = useState<string | undefined>();
-  const [fileLuS5SecretKeyError, setFileLuS5SecretKeyError] = useState<string | undefined>();
-  const [awsS3AccessIdError, setAwsS3AccessIdError] = useState<string | undefined>();
-  const [awsS3SecretKeyError, setAwsS3SecretKeyError] = useState<string | undefined>();
-  const [awsS3HostNameError, setAwsS3HostNameError] = useState<string | undefined>();
+  // Form ref
+  const fileLuFormRef = useRef<FileLuFormRef>(null);
+  const fileLuS5FormRef = useRef<FileLuS5FormRef>(null);
+  const awsS3FormRef = useRef<AwsS3FormRef>(null);
 
   // Naming template related
   const [namingTemplates, setNamingTemplates] = useState<WICTemplate[]>([]);
@@ -59,15 +51,15 @@ function App() {
     if (config.provider) {
       setProviderType(config.provider.type);
       if ('FileLu' === config.provider.type) {
-        setFileLuApiKey(config.provider.apiKey || '');
+        fileLuFormRef.current?.setValues(config.provider.apiKey || '');
       } else if ('FileLuS5' === config.provider.type) {
-        setFileLuS5AccessId(config.provider.accessId || '');
-        setFileLuS5SecretKey(config.provider.secretKey || '');
+        fileLuS5FormRef.current?.setValues(config.provider.accessId || '', config.provider.secretKey || '');
       } else if ('AwsS3' === config.provider.type) {
-        setAwsS3AccessId(config.provider.accessId || '');
-        setAwsS3SecretKey(config.provider.secretKey || '');
-        setAwsS3HostName(config.provider.hostName || '');
-        setAwsS3Region(config.provider.region || '');
+        awsS3FormRef.current?.setValues(
+          config.provider.hostName || '',
+          config.provider.region || '',
+          config.provider.accessId || '',
+          config.provider.secretKey || '');
       }
     }
     if (Array.isArray(config.templates)) {
@@ -127,50 +119,16 @@ function App() {
     e.preventDefault();
     e.stopPropagation();
 
-    // Reset layout
-    setFileLuApiKeyError(undefined);
-    setAwsS3AccessIdError(undefined);
-    setAwsS3SecretKeyError(undefined);
-
-    // Validate inputs
-    const providerInfo: WICProvider = { type: providerType };
-    let isValid = true;
+    // Validate forms
+    let providerInfo: WICProvider | undefined = undefined;
     if ('FileLu' === providerType) {
-      if (!fileLuApiKey) {
-        setFileLuApiKeyError(t("fieldRequired"));
-        isValid = false;
-      }
-      providerInfo.apiKey = fileLuApiKey;
+      providerInfo = fileLuFormRef.current?.validate();
     } else if ('FileLuS5' === providerType) {
-      if (!fileLuS5AccessId) {
-        setFileLuS5AccessIdError(t("fieldRequired"));
-        isValid = false;
-      }
-      if (!fileLuS5SecretKey) {
-        setFileLuS5SecretKeyError(t("fieldRequired"));
-        isValid = false;
-      }
-      providerInfo.accessId = fileLuS5AccessId;
-      providerInfo.secretKey = fileLuS5SecretKey;
+      providerInfo = fileLuS5FormRef.current?.validate();
     } else if ('AwsS3' === providerType) {
-      if (!awsS3HostName) {
-        setAwsS3HostNameError(t("fieldRequired"));
-        isValid = false;
-      }
-      if (!awsS3AccessId) {
-        setAwsS3AccessIdError(t("fieldRequired"));
-        isValid = false;
-      }
-      if (!awsS3SecretKey) {
-        setAwsS3SecretKeyError(t("fieldRequired"));
-        isValid = false;
-      }
-      providerInfo.hostName = awsS3HostName;
-      providerInfo.region = awsS3Region;
-      providerInfo.accessId = awsS3AccessId;
-      providerInfo.secretKey = awsS3SecretKey;
+      providerInfo = awsS3FormRef.current?.validate();
     }
-    if (!isValid) {
+    if (!providerInfo) {
       return false;
     }
 
@@ -273,9 +231,8 @@ function App() {
         throw new Error('Missing or unknown version.');
       }
 
-      if (!rawJson.provider || 'object' !== typeof rawJson.provider
-        || 'string' !== typeof rawJson.provider.type
-        || !['FileLu', 'S3'].includes(rawJson.provider.type)) {
+      if (!rawJson.provider || 'object' !== typeof rawJson.provider || 'string' !== typeof rawJson.provider.type
+        || !SUPPORT_PROVIDER_TYPES.some(provider => provider.type === rawJson.provider.type)) {
         // Missing or unknown provider type
         throw new Error('Missing or unknown provider type.');
       }
@@ -400,104 +357,15 @@ function App() {
           <Tabs id="storage-provider" defaultActiveKey={providerType} activeKey={providerType}
             onSelect={selected => setProviderType(selected as WICProviderType)}
           >
-            <Tab eventKey="FileLu" title={t("providerTypeFileLu")}>
-              <Tab.Content className="border border-top-0 p-3">
-                <Form.Group as={Row} controlId="filelu-api-key">
-                  <Form.Label column sm={3}>{t("apiKey")}</Form.Label>
-                  <Col sm={9}>
-                    <PasswordField password={fileLuApiKey} onInput={setFileLuApiKey} invalidMsg={fileLuApiKeyError} />
-                    <Form.Text>
-                      <Trans
-                        i18nKey="enableFileLuApiKeyAtMyAccount"
-                        components={[<a href="https://filelu.com/account/" target="_blank" />]}
-                      />
-                    </Form.Text>
-                    <Form.Text>
-                      <Trans
-                        i18nKey="suggestFileLuReferral"
-                        components={[<a href="https://filelu.com/5155514948.html" target="_blank" />]}
-                      />
-                    </Form.Text>
-                  </Col>
-                </Form.Group>
-              </Tab.Content>
-            </Tab>
-            <Tab eventKey="FileLuS5" title={t("providerTypeFileLuS5")}>
-              <Tab.Content className="border border-top-0 p-3">
-                <Form.Group as={Row} controlId="filelu-s5-access-id">
-                  <Form.Label column sm={3}>{t("accessId")}</Form.Label>
-                  <Col sm={9}>
-                    <Form.Control type="text" maxLength={50} isInvalid={!!fileLuS5AccessIdError}
-                      value={fileLuS5AccessId} onInput={e => setFileLuS5AccessId(e.currentTarget.value)}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {fileLuS5AccessIdError}
-                    </Form.Control.Feedback>
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} controlId="filelu-s5-secret-key">
-                  <Form.Label column sm={3}>{t("secretKey")}</Form.Label>
-                  <Col sm={9}>
-                    <PasswordField password={fileLuS5SecretKey} onInput={setFileLuS5SecretKey} invalidMsg={fileLuS5SecretKeyError} />
-                    <Form.Text>
-                      <Trans
-                        i18nKey="enableFileLuApiKeyAtMyAccount"
-                        components={[<a href="https://filelu.com/account/" target="_blank" />]}
-                      />
-                    </Form.Text>
-                    <Form.Text>
-                      <Trans
-                        i18nKey="suggestFileLuReferral"
-                        components={[<a href="https://filelu.com/5155514948.html" target="_blank" />]}
-                      />
-                    </Form.Text>
-                  </Col>
-                </Form.Group>
-              </Tab.Content>
-            </Tab>
-            <Tab eventKey="AwsS3" title={t("providerTypeAwsS3")}>
-              <Tab.Content className="border border-top-0 p-3">
-                <Form.Group as={Row} controlId="aws-s3-host-name">
-                  <Form.Label column sm={3}>{t("hostName")}</Form.Label>
-                  <Col sm={9}>
-                    <InputGroup>
-                      <InputGroup.Text>https://</InputGroup.Text>
-                      <Form.Control type="text" className="rounded-end" maxLength={100} isInvalid={!!awsS3HostNameError}
-                        value={awsS3HostName} onInput={e => setAwsS3HostName(e.currentTarget.value)}
-                      />
-                      <Form.Control.Feedback type="invalid">
-                        {awsS3HostNameError}
-                      </Form.Control.Feedback>
-                    </InputGroup>
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} controlId="aws-s3-region">
-                  <Form.Label column sm={3}>{t("region")}</Form.Label>
-                  <Col sm={9}>
-                    <Form.Control type="text" maxLength={50} placeholder={t("regionPlaceholder")}
-                      value={awsS3Region} onInput={e => setAwsS3Region(e.currentTarget.value)}
-                    />
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} controlId="aws-s3-access-id">
-                  <Form.Label column sm={3}>{t("accessId")}</Form.Label>
-                  <Col sm={9}>
-                    <Form.Control type="text" maxLength={50} isInvalid={!!awsS3AccessIdError}
-                      value={awsS3AccessId} onInput={e => setAwsS3AccessId(e.currentTarget.value)}
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {awsS3AccessIdError}
-                    </Form.Control.Feedback>
-                  </Col>
-                </Form.Group>
-                <Form.Group as={Row} controlId="aws-s3-secret-key">
-                  <Form.Label column sm={3}>{t("secretKey")}</Form.Label>
-                  <Col sm={9}>
-                    <PasswordField password={awsS3SecretKey} onInput={setAwsS3SecretKey} invalidMsg={awsS3SecretKeyError} />
-                  </Col>
-                </Form.Group>
-              </Tab.Content>
-            </Tab>
+            {SUPPORT_PROVIDER_TYPES.map(provider => (
+              <Tab eventKey={provider.type} title={provider.display}>
+                <Tab.Content className="border border-top-0 p-3">
+                  {'FileLu' === provider.type && <FileLuForm ref={fileLuFormRef} />}
+                  {'FileLuS5' === provider.type && <FileLuS5Form ref={fileLuS5FormRef} />}
+                  {'AwsS3' === provider.type && <AwsS3Form ref={awsS3FormRef} />}
+                </Tab.Content>
+              </Tab>
+            ))}
           </Tabs>
         </Col>
       </Row>
@@ -569,39 +437,33 @@ function App() {
         <Col sm="2" md="3" className="pb-3 pb-sm-0">{t("others")}</Col>
         <Col sm="10" md="9" className="field-list">
           <Form.Group controlId="sidebar-mode">
-            <Form.Label>Use of Sidebar</Form.Label>
+            <Form.Label>{t("sidebarMode")}</Form.Label>
             <Form.Select value={sidebarMode ? "1" : "0"} onChange={e => setSidebarMode(+e.currentTarget.value)}>
               <option value="0">Disabled, save images to cloud directly</option>
               <option value="1">Enabled, edit the directory or file name before saving</option>
             </Form.Select>
-            <Form.Text>
-              You can enable sidebar to show the edit form for target directory and file name before saving.
-            </Form.Text>
+            <Form.Text>{t("sidebarModeHelpText")}</Form.Text>
           </Form.Group>
           {!sidebarMode &&
             <Form.Group controlId="notification-level">
-              <Form.Label>Notifications</Form.Label>
+              <Form.Label>{t("notifications")}</Form.Label>
               <Form.Select value={`${notificationLevel}`} onChange={e => setNotificationLevel(+e.currentTarget.value)}>
                 <option value="4">Allow all notifications</option>
                 <option value="3">Notify when image saved or error occurred</option>
                 <option value="2">Notify only when errors ocurred</option>
                 <option value="1">Disabled (You have to check the result manually on provider)</option>
               </Form.Select>
-              <Form.Text>
-                Notifications are available when sidebar is disabled.
-              </Form.Text>
+              <Form.Text>{t("notificationsHelpText")}</Form.Text>
             </Form.Group>
           }
           <Form.Group controlId="image-format">
-            <Form.Label>Fallback Image Format</Form.Label>
+            <Form.Label>{t("fallbackImageFormat")}</Form.Label>
             <Form.Select value={imageFormat} onChange={e => setImageFormat(e.currentTarget.value as WICImageFormat)}>
               {SUPPORT_IMAGE_TYPES.map((item, index) => (
                 <option key={index} value={item.mime}>{item.selectText}</option>
               ))}
             </Form.Select>
-            <Form.Text>
-              If an image cannot be downloaded in its original format, WIC will use an alternative method to download and save it in the specified format.
-            </Form.Text>
+            <Form.Text>{t("fallbackImageFormatHelpText")}</Form.Text>
           </Form.Group>
         </Col>
       </Row>

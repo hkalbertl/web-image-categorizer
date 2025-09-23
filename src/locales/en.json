@@ -71,5 +71,12 @@
   "providerTypeAwsS3": "AWS S3 Compatible",
   "hostName": "Host Name",
   "region": "Region",
-  "regionPlaceholder": "Optional, only needed if your S3 provider requires it"
+  "regionHelpText": "Only needed if your S3 provider requires it",
+  "optional": "Optional",
+  "fallbackImageFormat": "Fallback Image Format",
+  "fallbackImageFormatHelpText": "If an image cannot be downloaded in its original format, WIC will use an alternative method to download and save it in the specified format.",
+  "notifications": "Notifications",
+  "notificationsHelpText": "Notifications",
+  "sidebarMode": "Use of Sidebar",
+  "sidebarModeHelpText": "You can enable sidebar to show the edit form for target directory and file name before saving."
 }
