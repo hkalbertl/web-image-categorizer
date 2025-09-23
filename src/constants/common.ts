@@ -1,5 +1,5 @@
 import i18n from '@/i18n';
-import { WICConfig, WICImageFormat } from "@/types/common";
+import { WICConfig, WICImageFormat, WICProviderType } from "@/types/common";
 
 /**
  * The default WIC config.
@@ -17,6 +17,12 @@ export const SUPPORT_IMAGE_TYPES = [
   { mime: 'image/jpeg' as WICImageFormat, extName: '.jpg', saveAs: i18n.t("saveAsJpg"), selectText: i18n.t("imageJpg") },
   { mime: 'image/png' as WICImageFormat, extName: '.png', saveAs: i18n.t("saveAsPng"), selectText: i18n.t("imagePng") },
   { mime: 'image/webp' as WICImageFormat, extName: '.webp', saveAs: i18n.t("saveAsWebp"), selectText: i18n.t("imageWebp") }
+];
+
+export const SUPPORT_PROVIDER_TYPES = [
+  { type: 'FileLu' as WICProviderType, display: i18n.t("providerTypeFileLu") },
+  { type: 'FileLuS5' as WICProviderType, display: i18n.t("providerTypeFileLuS5") },
+  { type: 'AwsS3' as WICProviderType, display: i18n.t("providerTypeAwsS3") },
 ];
 
 export const MIME_TYPE_BINARY = 'application/octet-stream';

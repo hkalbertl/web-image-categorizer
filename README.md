@@ -1,10 +1,15 @@
 # ![WIC Logo](public/icon/32.png) Web Image Categorizer
 
-Web Image Categorizer (WIC) is a browser extension that lets you save images from webpages directly to [FileLu](https://filelu.com/), a secure and privacy-first cloud storage provider. It supports custom naming templates, so you can organize your saved images with ease.
+Web Image Categorizer (WIC) is a browser extension that lets you save images from webpages directly to [FileLu](https://filelu.com/), a secure and privacy-first cloud storage provider.
 
-WIC offers two connection methods:
+Since v0.3.0, WIC also supports the [FileLu S5 API](https://filelu.com/pages/s5-object-storage/), which is AWS S3–compatible.
+
+You can define naming templates to preset the default save directory and file name according to your preferences.
+
+WIC currently supports following connection methods:
 * FileLu Native API: Provides full access to all locations within your FileLu drive.
-* FileLu S5: An AWS S3–compatible API that allows you to configure Bucket Policies for more granular access control.
+* FileLu S5 API: An AWS S3–compatible API that lets you configure bucket policies for more granular access control.
+* AWS S3–Compatible API: Connect to any storage provider that supports AWS S3 [path style](https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html#path-style-access) access.
 
 ## Motivation
 <details>
@@ -18,9 +23,9 @@ WIC offers two connection methods:
 </details>
 
 ## Features
-* Downloads images from webpages in their original formats and save them to FileLu with just two clicks.
+* Downloads images from webpages in their original formats and save them to your storage provider with just two clicks.
 * Supports naming templates based on webpage URLs so that images are saved to your preferred directory with your chosen file name.
-* Supports sidebar mode so that user can adjust the directory / file name / image format just before saving to FileLu.
+* Supports sidebar mode so that user can adjust the directory / file name / image format just before saving to your storage provider.
 * Supports client-side encryption by using [WCipher](https://github.com/hkalbertl/wcipher). Please check [Encryption](https://github.com/hkalbertl/web-image-categorizer/wiki/Documentation#encryption) section of project Wiki for more.
 
 ## Demo 1 - Without Sidebar
@@ -43,7 +48,7 @@ Please check the [Wiki](https://github.com/hkalbertl/web-image-categorizer/wiki)
 Thank you for using Web Image Categorizer. By using this add-on, you agree to the following terms:
 
 * Usage:
-  * You may use this add-on to save images to FileLu.
+  * You may use this add-on to save images to your storage provider.
   * You, the user, are responsible for ensuring that your use of this add-on complies with all applicable laws and regulations.
 * Prohibited Activities:
   * You may not use this add-on to download, save, or distribute illegal, copyrighted, or offensive images.
