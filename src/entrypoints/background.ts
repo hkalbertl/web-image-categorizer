@@ -1,6 +1,6 @@
 import i18n from "../i18n";
 import WCipher from "wcipher";
-import { loadConfig, initApiClient, sleep, toDisplaySize, matchTemplate, getErrorMessage, openSidebar, arrayBufferToDataUrl } from "@/utils/common";
+import { loadConfig, initApiClient, sleep, toDisplaySize, matchTemplate, getErrorMessage, openSidebar, arrayBufferToDataUrl, dataUrlToArrayBuffer, downloadImageByImageElement } from "@/utils/common";
 import { DEFAULT_CONFIG, ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY, SUPPORT_PROVIDER_TYPES } from '@/constants/common';
 import { WICConfig, WICImageData } from "@/types/common";
 
@@ -22,6 +22,10 @@ export default defineBackground(() => {
       appConfig = config;
       if (config.provider) {
         console.info(`Configuration loaded: ${config.provider.type}`);
+        // Ensure offscreen page for Chrome when sidebar is not in used
+        if (!config.sidebarMode && browser.sidePanel) {
+          ensureOffscreenDocument();
+        }
       } else {
         console.trace(`No provider defined in configuration. Configure it in option page.`);
       }
@@ -265,7 +269,7 @@ export default defineBackground(() => {
       const config = await loadConfig();
 
       // Prepare return object
-      const result: WICImageData = { mode: 'fetch' };
+      let result: WICImageData = { mode: 'fetch' };
 
       // Download image by fetch
       const res = await fetch(imageUrl, { referrer: referrer });
@@ -301,35 +305,13 @@ export default defineBackground(() => {
       } else if ('function' === typeof Image) {
         // Cannot download by fetch? Use image element instead
         // ** Does not work on Chrome **
-        result.mode = 'image';
-        // Create new image and config load event
-        const img = new Image();
-        img.onload = () => {
-          // Image download successfully, draw image to canvas
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
-          ctx!.drawImage(img, 0, 0);
-
-          // Convert to download data to blob
-          const imageFormat = config.imageFormat || DEFAULT_CONFIG.imageFormat;
-          result.dimension = `${canvas.width}x${canvas.height}`;
-          canvas.toBlob(async blob => {
-            // Canvas converted to blob
-            result.blobArray = await blob!.arrayBuffer();
-            result.blobType = imageFormat;
-
-            // All done, return result
-            resolve(result);
-          }, imageFormat);
-        };
-        img.onerror = () => {
-          // Error on loading image?
-          reject(new Error('Image failed to load.'));
-        };
-        img.crossOrigin = 'anonymous'; // Magic
-        img.src = imageUrl;
+        result = await downloadImageByImageElement(imageUrl, config.imageFormat);
+        resolve(result);
+      } else if (browser.sidePanel) {
+        // Process the image by using offscreen page for Chrome
+        // ** Used by Chrome only **
+        result = await downloadImageByOffscreen(imageUrl, config.imageFormat);
+        resolve(result);
       } else {
         // Cannot download image
         reject(new Error('Image failed to load.'));
@@ -382,6 +364,55 @@ export default defineBackground(() => {
         reject(new Error('Image failed to load.'));
       };
       img.src = imageUrl;
+    });
+  }
+
+  const ensureOffscreenDocument = async () => {
+    const contexts = await browser.offscreen.hasDocument();
+    if (!contexts) {
+      browser.offscreen.createDocument({
+        url: 'offscreen.html',
+        reasons: ['DOM_PARSER'],
+        justification: 'Need <img/> to load and measure image size'
+      });
+    }
+  }
+
+  /**
+   * Download image at offscreen page, supported by Chrome only.
+   * @param imageUrl
+   * @param imageFormat
+   * @returns
+   */
+  const downloadImageByOffscreen = async (imageUrl: string, imageFormat: string): Promise<WICImageData> => {
+    await ensureOffscreenDocument();
+
+    return new Promise((resolve, reject) => {
+      const listener = (message: any) => {
+        if ('offscreen-image-completed' === message.action) {
+          // Image downloaded at offscreen
+          browser.runtime.onMessage.removeListener(listener);
+          // Convert data URL back to array buffer
+          const blobArray = dataUrlToArrayBuffer(message.imageData);
+          resolve({
+            mode: 'image',
+            blobArray,
+            blobType: message.imageType,
+            dimension: message.dimension,
+          });
+        } else if ('offscreen-image-failed' === message.action) {
+          // Failed to download at offscreen
+          browser.runtime.onMessage.removeListener(listener);
+          reject(new Error(message.error));
+        }
+      };
+      browser.runtime.onMessage.addListener(listener);
+
+      browser.runtime.sendMessage({
+        action: 'offscreen-download-image',
+        imageUrl,
+        imageFormat,
+      });
     });
   }
 });
