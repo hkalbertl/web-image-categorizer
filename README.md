@@ -42,32 +42,31 @@ https://github.com/user-attachments/assets/11c35704-aa86-4764-b4c4-0fcc0ed16971
   * Download and install the signed `.xpi` from [release page](https://github.com/hkalbertl/web-image-categorizer/releases) by using the [official instructions](https://extensionworkshop.com/documentation/publish/install-self-distributed/#install-addon-from-file).
   * (Coming soon) Install it from official FireFox add-on site.
 * Chromium-based (Chrome / Edge / Brave / etc)
-  * Download and install the `-chrome.zip` from [release page](https://github.com/hkalbertl/web-image-categorizer/releases) by using the [Load an unpacked extension](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked) method.
-  * Currently not published on Chrome Web Store. If you would like to see WIC on the Chrome Web Store, please star this repository or open an issue.  
-  * Once there is enough community interest, I will cover the Chrome Developer registration and publish it officially.
+  * Download and install the `-chrome.zip` from [release page](https://github.com/hkalbertl/web-image-categorizer/releases) by using the [load an unpacked extension](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked) method.
+  * WIC isn't on the Chrome Web Store yet. Please star this repository or open an issue if you'd like to see it there — a Chrome version will be published once there's enough community interest.
 
 ## Usage / Options
 Please check the [Wiki](https://github.com/hkalbertl/web-image-categorizer/wiki) for more information.
 
 ## Terms of Use
-By using this add-on, you agree to the following terms:
+By using this extension, you agree to the following terms:
 
-* Usage:
-  * You may use this add-on / extension to save images to your storage provider.
-  * You, the user, are responsible for ensuring that your use of this add-on / extension complies with all applicable laws and regulations.
-* Prohibited Activities:
-  * You may not use this add-on / extension to download, save, or distribute illegal, copyrighted, or offensive images.
-  * Any misuse of this add-on / extension, including but not limited to downloading illegal content, is strictly prohibited.
-* Disclaimer:
-  * This add-on / extension is provided "as is" without warranty of any kind, either express or implied.
-  * The author makes no representations or warranties regarding the functionality or reliability of this add-on / extension.
-* Limitation of Liability:
-  * The author shall not be liable for any damages arising out of or in connection with the use or inability to use this add-on / extension. This includes, without limitation, direct, indirect, incidental, or consequential damages.
-* Privacy:
-  * This add-on / extension does not track user activities or submit any data to third parties.
-  * Your usage data and any information related to the images you save are not collected or shared.
-* Modifications:
-  * The author reserves the right to modify these terms at any time. Any changes will be updated in the README page.
+* Usage
+  * This extension may be used to save images to a supported storage provider.
+  * Users are responsible for ensuring that their use of the extension complies with all applicable laws and regulations.
+* Prohibited Activities
+  * The extension must not be used to download, save, or distribute illegal, copyrighted, or offensive images.
+  * Any misuse of the extension, including but not limited to downloading illegal content, is strictly prohibited.
+* Disclaimer
+  * The extension is provided "as is" without warranties of any kind, express or implied.
+  * No guarantees are made regarding the functionality, reliability, or availability of the extension.
+* Limitation of Liability
+  * No liability shall be assumed for any damages arising from the use or inability to use the extension. This includes, without limitation, direct, indirect, incidental, or consequential damages.
+* Privacy
+  * The extension does not track user activity or transmit data to third parties.
+  * Usage data and information related to saved images are not collected or shared.
+* Modifications
+  * These terms may be updated from time to time. Any changes will be reflected in the README.
 
 ## Limitations
 * WIC uses the [context menu](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/user_interface/Context_menu_items) API to detect images with the [images](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/menus/ContextType) context type. It may not work on images that are protected by security measures, such as webpages with right-click disabled or images covered by other HTML elements.
