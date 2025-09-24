@@ -43,26 +43,28 @@ https://github.com/user-attachments/assets/11c35704-aa86-4764-b4c4-0fcc0ed16971
   * (Coming soon) Install it from official FireFox add-on site.
 * Chromium-based (Chrome / Edge / Brave / etc)
   * Download and install the `-chrome.zip` from [release page](https://github.com/hkalbertl/web-image-categorizer/releases) by using the [Load an unpacked extension](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked) method.
+  * Currently not published on Chrome Web Store. If you would like to see WIC on the Chrome Web Store, please star this repository or open an issue.  
+  * Once there is enough community interest, I will cover the Chrome Developer registration and publish it officially.
 
 ## Usage / Options
 Please check the [Wiki](https://github.com/hkalbertl/web-image-categorizer/wiki) for more information.
 
 ## Terms of Use
-Thank you for using Web Image Categorizer. By using this add-on, you agree to the following terms:
+By using this add-on, you agree to the following terms:
 
 * Usage:
-  * You may use this add-on to save images to your storage provider.
-  * You, the user, are responsible for ensuring that your use of this add-on complies with all applicable laws and regulations.
+  * You may use this add-on / extension to save images to your storage provider.
+  * You, the user, are responsible for ensuring that your use of this add-on / extension complies with all applicable laws and regulations.
 * Prohibited Activities:
-  * You may not use this add-on to download, save, or distribute illegal, copyrighted, or offensive images.
-  * Any misuse of this add-on, including but not limited to downloading illegal content, is strictly prohibited.
+  * You may not use this add-on / extension to download, save, or distribute illegal, copyrighted, or offensive images.
+  * Any misuse of this add-on / extension, including but not limited to downloading illegal content, is strictly prohibited.
 * Disclaimer:
-  * This add-on is provided "as is" without warranty of any kind, either express or implied.
-  * The author makes no representations or warranties regarding the functionality or reliability of this add-on.
+  * This add-on / extension is provided "as is" without warranty of any kind, either express or implied.
+  * The author makes no representations or warranties regarding the functionality or reliability of this add-on / extension.
 * Limitation of Liability:
-  * The author shall not be liable for any damages arising out of or in connection with the use or inability to use this add-on. This includes, without limitation, direct, indirect, incidental, or consequential damages.
+  * The author shall not be liable for any damages arising out of or in connection with the use or inability to use this add-on / extension. This includes, without limitation, direct, indirect, incidental, or consequential damages.
 * Privacy:
-  * This add-on does not track user activities or submit any data to third parties.
+  * This add-on / extension does not track user activities or submit any data to third parties.
   * Your usage data and any information related to the images you save are not collected or shared.
 * Modifications:
   * The author reserves the right to modify these terms at any time. Any changes will be updated in the README page.
