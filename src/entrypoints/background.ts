@@ -1,7 +1,7 @@
 import i18n from "../i18n";
 import WCipher from "wcipher";
 import { loadConfig, initApiClient, sleep, toDisplaySize, matchTemplate, getErrorMessage, openSidebar, arrayBufferToDataUrl } from "@/utils/common";
-import { DEFAULT_CONFIG, ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY } from '@/constants/common';
+import { DEFAULT_CONFIG, ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY, SUPPORT_PROVIDER_TYPES } from '@/constants/common';
 import { WICConfig, WICImageData } from "@/types/common";
 
 export default defineBackground(() => {
@@ -37,14 +37,8 @@ export default defineBackground(() => {
   });
 
   // Create a context menu entry for images
-  browser.runtime.onInstalled.addListener(() => {
-    // Add the standard option
-    browser.contextMenus.create({
-      id: CONTEXT_MENU_ACTION,
-      title: i18n.t("contextMenuSaveImage"),
-      contexts: ["image"]
-    });
-  });
+  browser.runtime.onInstalled.addListener(() => recreateContextMenus());
+  browser.runtime.onStartup.addListener(() => recreateContextMenus());
 
   // Handle the click event on the context menu
   // ** Event handler must not be `async` if sidebar is used **
@@ -81,6 +75,19 @@ export default defineBackground(() => {
   });
 
   console.info(`${i18n.t("appShortName")}'s service worker is running!`);
+
+  /**
+   * Re-create the context menu for saving images.
+   */
+  const recreateContextMenus = () => {
+    browser.contextMenus.removeAll(() => {
+      browser.contextMenus.create({
+        id: CONTEXT_MENU_ACTION,
+        title: i18n.t("contextMenuSaveImage"),
+        contexts: ["image"]
+      });
+    });
+  };
 
   /**
    * Handle image save context menu clicked.
@@ -181,10 +188,11 @@ export default defineBackground(() => {
         });
       } else {
         // Upload to storage provider
+        const providerName = SUPPORT_PROVIDER_TYPES.find(pv => pv.type === appConfig.provider?.type)?.display || appConfig.provider.type;
         const api = initApiClient(appConfig.provider);
         if (!api) {
           // Unknown provider
-          throw new Error(i18n.t("invalidProviderOptions") + appConfig.provider.type);
+          throw new Error(i18n.t("invalidProviderOptions") + providerName);
         }
 
         // Encrypt file, if required
@@ -205,7 +213,7 @@ export default defineBackground(() => {
         // Update notification
         let notifyMessage: string | null = null, msgLevel = 3;
         if (nameData.isMatched) {
-          notifyMessage = `✓ Image saved to ${appConfig.provider.type}!`;
+          notifyMessage = `✓ Image saved to ${providerName}!`;
         } else {
           notifyMessage = `⚠ No template matched and image saved to default path: ${nameData.directory}/${fileName}`;
           msgLevel = 2;
