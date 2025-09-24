@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import mime from 'mime';
 import { isMatch } from 'matcher';
-import { WICConfig, WICTemplate, WICMatchResult, WICProvider } from '../types/common'
+import { WICConfig, WICTemplate, WICMatchResult, WICProvider, WICImageData } from '../types/common'
 import { DEFAULT_CONFIG, SUPPORT_IMAGE_TYPES, SUPPORT_PROVIDER_TYPES } from '@/constants/common';
 import i18n from '@/i18n';
 import StorageProvider from '@/services/StorageProvider';
@@ -574,4 +574,44 @@ export const validateImportConfig = (rawJson: any): WICConfig => {
 
   // Config is valid
   return importConfig;
+};
+
+/**
+ * Download image by using DOM Image element.
+ * @param imageUrl Target image URL.
+ * @param imageFormat Preferred image format.
+  */
+export const downloadImageByImageElement = async (imageUrl: string, imageFormat: string): Promise<WICImageData> => {
+  return new Promise(async (resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      // Image download successfully, draw image to canvas
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx!.drawImage(img, 0, 0);
+      // Convert to download data to blob
+      const blobType = imageFormat || DEFAULT_CONFIG.imageFormat,
+        dimension = `${canvas.width}x${canvas.height}`;
+      canvas.toBlob(async blob => {
+        // Prepare result object
+        const result: WICImageData = {
+          mode: 'image',
+          dimension,
+          blobType,
+        };
+        // Canvas converted to blob
+        result.blobArray = await blob!.arrayBuffer();
+        // All done, return result
+        resolve(result);
+      }, blobType);
+    };
+    img.onerror = () => {
+      // Error on loading image?
+      reject(new Error('Image failed to load.'));
+    };
+    img.crossOrigin = 'anonymous'; // Magic
+    img.src = imageUrl;
+  });
 };

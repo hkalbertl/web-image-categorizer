@@ -5,14 +5,20 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   srcDir: "src",
   manifest: ({ browser, manifestVersion, mode, command }) => {
+    const isFireFox = 'firefox' === browser;
+    const permissions = ["activeTab", "storage", "contextMenus", "notifications"];
+    if (!isFireFox) {
+      // FireFox does not support offscreen
+      permissions.push("offscreen");
+    }
     return {
       name: "Web Image Categorizer",
       short_name: "WIC",
-      permissions: ["activeTab", "storage", "contextMenus", "notifications"],
+      permissions,
       host_permissions: [
         "*://*/*"
       ],
-      browser_specific_settings: 'firefox' === browser ? {
+      browser_specific_settings: isFireFox ? {
         gecko: {
           id: "{bea31321-7d20-4dc1-a53f-5affb7b85a24}",
           strict_min_version: "127.0"
