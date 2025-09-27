@@ -1,15 +1,10 @@
 # ![WIC Logo](public/icon/32.png) Web Image Categorizer
 
-Web Image Categorizer (WIC) is a browser extension that lets you save images from webpages directly to [FileLu](https://filelu.com/), a secure and privacy-first cloud storage provider.
+Web Image Categorizer (WIC) is a browser extension that lets you save images from webpages directly to [FileLu](https://filelu.com/), a secure, privacy-focused cloud storage provider.
 
-Since v0.3.0, WIC also supports the [FileLu S5 API](https://filelu.com/pages/s5-object-storage/), which is AWS S3–compatible.
+WIC now supports FileLu's [S5 Object Storage API](https://filelu.com/pages/s5-object-storage/), providing an alternative upload method. Since S5 is AWS S3–compatible, WIC can also connect to other S3 storage providers that use [path-style access](https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html#path-style-access).
 
-You can define naming templates to preset the default save directory and file name according to your preferences.
-
-WIC currently supports following connection methods:
-* FileLu Native API: Provides full access to all locations within your FileLu drive.
-* FileLu S5 API: An AWS S3–compatible API that lets you configure bucket policies for more granular access control.
-* AWS S3–Compatible API: Connect to any storage provider that supports AWS S3 [path style access](https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html#path-style-access).
+You can define naming templates to preset default save directories and file names to match your preferences.
 
 ## Motivation
 <details>
@@ -39,8 +34,7 @@ https://github.com/user-attachments/assets/11c35704-aa86-4764-b4c4-0fcc0ed16971
 
 ## Installation
 * FireFox
-  * Download and install the signed `.xpi` from [release page](https://github.com/hkalbertl/web-image-categorizer/releases) by using the [official instructions](https://extensionworkshop.com/documentation/publish/install-self-distributed/#install-addon-from-file).
-  * (Coming soon) Install it from official FireFox add-on site.
+  * Download and install from the [official FireFox add-on site](https://addons.mozilla.org/en-GB/firefox/addon/web-image-categorizer/).
 * Chromium-based (Chrome / Edge / Brave / etc)
   * Download and install the `-chrome.zip` from [release page](https://github.com/hkalbertl/web-image-categorizer/releases) by using the [load an unpacked extension](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world#load-unpacked) method.
   * WIC isn't on the Chrome Web Store yet. Please star this repository or open an issue if you'd like to see it there — a Chrome version will be published once there's enough community interest.
