@@ -27,7 +27,7 @@ export default defineBackground(() => {
           ensureOffscreenDocument();
         }
       } else {
-        console.trace(`No provider defined in configuration. Configure it in option page.`);
+        console.warn(`No provider defined in configuration. Configure it in option page.`);
       }
     });
   };
@@ -48,34 +48,34 @@ export default defineBackground(() => {
   // ** Event handler must not be `async` if sidebar is used **
   browser.contextMenus.onClicked.addListener((info, tab) => {
     // Check menu ID
-    if (CONTEXT_MENU_ACTION === info.menuItemId && info.srcUrl) {
-      // Check provider defined
-      if (!appConfig || !appConfig.provider) {
-        // Open options page
-        browser.runtime.openOptionsPage();
-      } else {
-        // Open sidebar, if enabled
-        if (0 !== appConfig.sidebarMode) {
-          console.debug('Opening sidebar...');
-          openSidebar(tab!.windowId!).then(() => {
-            // Add a small delay to allow sidebar to load
-            sleep(OPEN_SIDEBAR_DELAY).then(() => {
-              // Set retrieving image
-              browser.runtime.sendMessage({ action: 'prepare-image' });
-            });
-          }).catch(err => {
-            // Failed to open sidebar??
-            console.error('Failed to open sidebar...', err);
-          });
-        }
-        // Handle save menu clicked
-        handleContextMenuSaveClicked(info.srcUrl, tab?.url || '', tab?.title || '').catch(err => {
-          console.error('Failed to handle save menu clicked...', err);
-        });
-      }
-    } else {
-      console.error(`Unknown context menu action: ${info.menuItemId}`);
+    if (CONTEXT_MENU_ACTION !== info.menuItemId || !info.srcUrl) {
+      // Exclude unknown actions or without source URL
+      return;
     }
+    // Check provider defined
+    if (!appConfig || !appConfig.provider) {
+      // Config is not defined, open options page
+      browser.runtime.openOptionsPage();
+      return;
+    }
+    // Open sidebar, if enabled
+    if (0 !== appConfig.sidebarMode) {
+      console.debug('Opening sidebar...');
+      openSidebar(tab!.windowId!).then(() => {
+        // Add a small delay to allow sidebar to load
+        sleep(OPEN_SIDEBAR_DELAY).then(() => {
+          // Set retrieving image
+          browser.runtime.sendMessage({ action: 'prepare-image' });
+        });
+      }).catch(err => {
+        // Failed to open sidebar??
+        console.error('Failed to open sidebar...', err);
+      });
+    }
+    // Handle save menu clicked
+    handleContextMenuSaveClicked(info.srcUrl, tab?.url || '', tab?.title || '').catch(err => {
+      console.error('Failed to handle save menu clicked...', err);
+    });
   });
 
   console.info(`${i18n.t("appShortName")}'s service worker is running!`);
@@ -118,7 +118,7 @@ export default defineBackground(() => {
     const isDataUrl = 0 === imageUrl.search(/^data\:image\//gi);
     if (!isDataUrl && -1 === imageUrl.search(/^https?\:\/\//gi)) {
       // Unsupported image URL detected
-      const errorMsg = `Unsupported image format: ${imageUrl}`;
+      const errorMsg = i18n.t("unsupportedImageFormat") + imageUrl;
       if (useSideBar) {
         // Send the error message to sidebar
         sleep(OPEN_SIDEBAR_DELAY).then(() => {
@@ -142,7 +142,7 @@ export default defineBackground(() => {
     if (!useSideBar && 4 <= notifyLevel) {
       browser.notifications.create(notifyId, {
         ...notifyBase,
-        message: 'Processing image...'
+        message: i18n.t("processingImage")
       });
     }
 
@@ -217,16 +217,16 @@ export default defineBackground(() => {
         // Update notification
         let notifyMessage: string | null = null, msgLevel = 3;
         if (nameData.isMatched) {
-          notifyMessage = `✓ Image saved to ${providerName}!`;
+          notifyMessage = i18n.t("notifyImageSaved") + providerName;
         } else {
-          notifyMessage = `⚠ No template matched and image saved to default path: ${nameData.directory}/${fileName}`;
+          notifyMessage = i18n.t("notifyImageSavedToDefaultPath") + `${nameData.directory}/${fileName}`;
           msgLevel = 2;
         }
         if (msgLevel <= notifyLevel) {
           // Add size and dimension to message
-          notifyMessage += `\nSize=${displaySize}`;
+          notifyMessage += `\n${i18n.t("size")}=${displaySize}`;
           if (imageData.dimension) {
-            notifyMessage += `, Dim.=${imageData.dimension}`
+            notifyMessage += `, ${i18n.t("dimensionShort")}=${imageData.dimension}`
           }
           await browser.notifications.clear(notifyId);
           await browser.notifications.create(notifyId, {
@@ -237,7 +237,7 @@ export default defineBackground(() => {
       }
     } catch (ex) {
       // Error occurred
-      const errorMsg = getErrorMessage(ex) || 'Unknown download error...';
+      const errorMsg = getErrorMessage(ex) || i18n.t("unknownDownloadError");
       console.error('Failed to download image...', ex);
       if (useSideBar) {
         // Show error after delay
@@ -373,7 +373,7 @@ export default defineBackground(() => {
       browser.offscreen.createDocument({
         url: 'offscreen.html',
         reasons: ['DOM_PARSER'],
-        justification: 'Need <img/> to load and measure image size'
+        justification: 'Need <img/> to download and measure image size'
       });
     }
   }

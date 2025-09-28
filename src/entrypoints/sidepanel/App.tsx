@@ -1,23 +1,16 @@
 import { Trans, useTranslation } from "react-i18next";
-import { Navbar, Container, NavbarBrand, Form, Button, Alert, Spinner, InputGroup, DropdownButton, Dropdown, Badge } from "react-bootstrap";
+import { Navbar, Container, NavbarBrand, Form, Button, Alert, Spinner, InputGroup, Dropdown, Badge } from "react-bootstrap";
 import { CheckLg, ExclamationTriangle, Floppy, Lightbulb, QuestionCircle } from "react-bootstrap-icons";
 import WCipher from "wcipher";
-import { ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY, SUPPORT_PROVIDER_TYPES } from "@/constants/common";
+import { ENCRYPTION_EXT_NAME, MIME_TYPE_BINARY, SUPPORT_PROVIDER_TYPES, SUPPORT_IMAGE_TYPES } from "@/constants/common";
 import { configBsTheme, loadConfig, initApiClient, dataUrlToArrayBuffer, encodeImage, getExtName, toDisplaySize, isValidForFileName, normalizeDirectoryPath } from "@/utils/common";
 
 import '../../../node_modules/bootstrap/dist/css/bootstrap.min.css';
 import './App.scss';
 
-
 function App() {
 
   const { t } = useTranslation();
-
-  const supportedImageFormats = [
-    { mime: 'image/jpeg', extName: '.jpg', display: t("saveAsJpg") },
-    { mime: 'image/png', extName: '.png', display: t("saveAsPng") },
-    { mime: 'image/webp', extName: '.webp', display: t("saveAsWebp") }
-  ];
 
   const [navbarProvider, setNavbarProvider] = useState<string>();
   const [showSetupTips, setShowSetupTips] = useState(false);
@@ -290,6 +283,7 @@ function App() {
     return false;
   };
 
+  // Functions to call when page loaded
   useEffect(() => {
     // Config theme
     configBsTheme();
@@ -301,40 +295,48 @@ function App() {
         refreshConfig();
       }
     });
-    // Register event listener
-    browser.runtime.onMessage.addListener(async (message: any) => {
-      if (!isSaving) {
-        // Handle messages only when sidebar is idle
-        if ('reload-sidebar' === message.action) {
-          // Reload to apply config
-          self.location.reload();
-        } else if ('prepare-image' === message.action) {
-          // Reset layout and just show retrieving
-          resetLayout();
-          setIsRetrieving(true);
-        } else if ('fill-image' === message.action) {
-          // Check image data
-          let blobArray: ArrayBuffer;
-          if (message.imageData instanceof ArrayBuffer) {
-            // FireFox
-            blobArray = message.imageData;
-          } else {
-            // Chrome, decode the data URL
-            blobArray = dataUrlToArrayBuffer(message.imageData as string);
-          }
-          // Image sent from background / content
-          await fillImageData(blobArray, message.imageType, message.dimension, message.displaySize,
-            message.directory, message.fileName, message.extension, message.useEncryption);
-        } else if ('show-error' === message.action) {
-          // Problem occurred in background script, hide elements
-          resetLayout();
-          setErrorMessage(message.error);
+  }, []);
+
+  // Register message listener when `isSaving` updated
+  useEffect(() => {
+    // Define event listener
+    const messageListener = async (message: any) => {
+      // Handle message only when not saving
+      if (isSaving) return;
+      // Handle messages only when sidebar is idle
+      if ('reload-sidebar' === message.action) {
+        // Reload to apply config
+        self.location.reload();
+      } else if ('prepare-image' === message.action) {
+        // Reset layout and just show retrieving
+        resetLayout();
+        setIsRetrieving(true);
+      } else if ('fill-image' === message.action) {
+        // Check image data
+        let blobArray: ArrayBuffer;
+        if (message.imageData instanceof ArrayBuffer) {
+          // FireFox
+          blobArray = message.imageData;
+        } else {
+          // Chrome, decode the data URL
+          blobArray = dataUrlToArrayBuffer(message.imageData as string);
         }
+        // Image sent from background / content
+        await fillImageData(blobArray, message.imageType, message.dimension, message.displaySize,
+          message.directory, message.fileName, message.extension, message.useEncryption);
+      } else if ('show-error' === message.action) {
+        // Problem occurred in background script, hide elements
+        resetLayout();
+        setErrorMessage(message.error);
       }
       // Return true to indicate the response is asynchronous (optional)
       return true;
-    });
-  }, []);
+    };
+    // Register event listener
+    browser.runtime.onMessage.addListener(messageListener);
+    // Un-register event listener when unload
+    return () => browser.runtime.onMessage.removeListener(messageListener);
+  }, [isSaving])
 
   return (<>
     <Navbar expand>
@@ -402,9 +404,9 @@ function App() {
                   <Dropdown>
                     <Dropdown.Toggle variant="outline-secondary" className="rounded-end"></Dropdown.Toggle>
                     <Dropdown.Menu align="end">
-                      {supportedImageFormats.map((format, index) => (
+                      {SUPPORT_IMAGE_TYPES.map((format, index) => (
                         <Dropdown.Item key={index} onClick={() => onImageFormatChanged(format.mime)}>
-                          {format.display}
+                          {format.saveAs}
                         </Dropdown.Item>
                       ))}
                       <Dropdown.Divider />

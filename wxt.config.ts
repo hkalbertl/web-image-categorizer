@@ -20,10 +20,17 @@ export default defineConfig({
       ],
       browser_specific_settings: isFireFox ? {
         gecko: {
-          id: "{bea31321-7d20-4dc1-a53f-5affb7b85a24}",
+          id: "{8276cdb0-d7d9-4e1b-87a0-1f5f1726d806}",
           strict_min_version: "127.0"
         }
       } : undefined,
     };
   },
+  vite: (env) => ({
+    esbuild: {
+      // Drop console log messages when running commands: build / zip
+      pure: ['build', 'build:firefox', 'zip', 'zip:firefox'].includes(env.command)
+        ? ['console.log', 'console.debug', 'console.trace'] : [],
+    },
+  }),
 });
