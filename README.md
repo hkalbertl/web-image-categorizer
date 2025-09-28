@@ -2,7 +2,7 @@
 
 Web Image Categorizer (WIC) is a browser extension that lets you save images from webpages directly to [FileLu](https://filelu.com/), a secure, privacy-focused cloud storage provider.
 
-WIC now supports FileLu's [S5 Object Storage API](https://filelu.com/pages/s5-object-storage/), providing an alternative upload method. Since S5 is AWS S3–compatible, WIC can also connect to other S3 storage providers that use [path-style access](https://docs.aws.amazon.com/AmazonS3/latest/userguide/VirtualHosting.html#path-style-access).
+WIC now supports FileLu's [S5 Object Storage API](https://filelu.com/pages/s5-object-storage/), providing an alternative upload method. Since S5 is AWS S3–compatible, WIC can also connect to other S3 storage providers.
 
 You can define naming templates to preset default save directories and file names to match your preferences.
 
@@ -22,6 +22,7 @@ You can define naming templates to preset default save directories and file name
 * Supports naming templates based on webpage URLs so that images are saved to your preferred directory with your chosen file name.
 * Supports sidebar mode so that user can adjust the directory / file name / image format just before saving to your storage provider.
 * Supports client-side encryption by using [WCipher](https://github.com/hkalbertl/wcipher). Please check [Encryption](https://github.com/hkalbertl/web-image-categorizer/wiki/Documentation#encryption) section of project Wiki for more.
+* User privacy is a top priority. This add-on does not collect any activity or personal data, and all data uploads go directly to the user's chosen storage provider.
 
 ## Demo 1 - Without Sidebar
 https://github.com/user-attachments/assets/af1ace5e-f84a-4d86-ac43-5cf2ec43c768
