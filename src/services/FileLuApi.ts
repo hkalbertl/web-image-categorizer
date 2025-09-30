@@ -43,7 +43,7 @@ export default class FileLuApi implements StorageProvider {
     return false;
   }
 
-  uploadFile = async (directory: string, fileName: string, fileBlob: Blob): Promise<string> => {
+  uploadFile = async (directory: string, fileName: string, description: string | undefined, fileBlob: Blob): Promise<string> => {
     // Upload to FileLu, get target directory
     let level = 0, folderId = 0, parentId = folderId, isCreateMode = false;
     const segments = directory.substring(1).split('/');

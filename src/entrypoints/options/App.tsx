@@ -381,8 +381,8 @@ function App() {
       </Row>
     </Form>
 
-    <EditTemplateModal show={showEditTemplateModal} isEditing={isTemplateEditing} template={templateForEdit}
-      onClose={() => { setShowEditTemplateModal(false) }} onSave={onApplyTemplate} />
+    <EditTemplateModal show={showEditTemplateModal} isEditing={isTemplateEditing} providerType={providerType}
+      template={templateForEdit} onClose={() => { setShowEditTemplateModal(false) }} onSave={onApplyTemplate} />
 
     <MessageModal mode={msgModalMode} message={msgModalText}
       onClose={() => setMsgModalMode('hidden')} />

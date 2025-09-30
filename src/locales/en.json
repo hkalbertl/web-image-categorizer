@@ -17,6 +17,7 @@
   "pattern": "Pattern",
   "directoryPattern": "Directory Pattern",
   "fileNamePattern": "File Name Pattern",
+  "descriptionPattern": "Description Pattern",
   "sourceUrl": "Source URL",
   "storageProviders": "Storage Providers",
   "apiKey": "API Key",
@@ -88,5 +89,6 @@
   "notifyImageSavedToDefaultPath": "⚠ No template matched and image saved to default path:\n",
   "size": "Size",
   "dimensionShort": "Dim.",
-  "unknownDownloadError": "Unknown download error."
+  "unknownDownloadError": "Unknown download error.",
+  "fileDescription": "Description"
 }
