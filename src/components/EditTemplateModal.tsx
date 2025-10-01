@@ -1,6 +1,6 @@
 import { validateTemplateInput } from "@/utils/common";
-import { WICTemplate } from "@/types/common";
-import { Button, Form, InputGroup, Modal } from "react-bootstrap";
+import { WICProviderType, WICTemplate, WICTemplateField } from "@/types/common";
+import { Button, Form, FormGroup, InputGroup, Modal } from "react-bootstrap";
 import { ClipboardPulse, Pencil, XLg } from "react-bootstrap-icons";
 import UrlTesterModal from "./UrlTesterModal";
 import ParamTesterModal from "./ParamTesterModal";
@@ -10,28 +10,31 @@ import { normalizeDirectoryPath } from "@/utils/common";
 interface EditTemplateModalProps {
   show: boolean;
   isEditing: boolean;
+  providerType: WICProviderType;
   template?: WICTemplate;
   onClose: () => void;
   onSave: (template: WICTemplate) => void;
 }
 
-const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, template, onClose, onSave }) => {
+const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, providerType, template, onClose, onSave }) => {
 
   const { t } = useTranslation();
 
   const [url, setUrl] = useState("");
   const [directory, setDirectory] = useState("");
   const [fileName, setFileName] = useState("");
+  const [description, setDescription] = useState("");
   const [encryption, setEncryption] = useState(false);
 
   const [urlError, setUrlError] = useState<string | null>(null);
   const [directoryError, setDirectoryError] = useState<string | null>(null);
   const [fileNameError, setFileNameError] = useState<string | null>(null);
+  const [descriptionError, setDescriptionError] = useState<string | null>(null);
 
   const [showUrlTester, setShowUrlTester] = useState(false);
   const [showParamTester, setShowParamTester] = useState(false);
   const [paramTesterPattern, setParamTesterPattern] = useState("");
-  const [paramTesterDirMode, setParamTesterDirMode] = useState(false);
+  const [paramTesterField, setParamTesterField] = useState<WICTemplateField>(WICTemplateField.Directory);
 
   const onFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,12 +45,14 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, 
     setUrlError(null);
     setDirectoryError(null);
     setFileNameError(null);
+    setDescriptionError(null);
 
     // Read form values
     const record: WICTemplate = {
       url: url.trim(),
       directory: normalizeDirectoryPath(directory),
       fileName: fileName.trim(),
+      description: description.trim(),
       encryption
     };
 
@@ -57,7 +62,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, 
     }
 
     if (record.directory) {
-      let itemError = validateTemplateInput(record.directory, true);
+      let itemError = validateTemplateInput(record.directory, WICTemplateField.Directory);
       if (itemError) {
         setDirectoryError(itemError);
         isValid = false;
@@ -65,9 +70,17 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, 
     }
 
     if (record.fileName) {
-      let itemError = validateTemplateInput(record.fileName, false);
+      let itemError = validateTemplateInput(record.fileName, WICTemplateField.FileName);
       if (itemError) {
         setFileNameError(itemError);
+        isValid = false;
+      }
+    }
+
+    if (record.description) {
+      let itemError = validateTemplateInput(record.description, WICTemplateField.Description);
+      if (itemError) {
+        setDescriptionError(itemError);
         isValid = false;
       }
     }
@@ -98,6 +111,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, 
       setUrl(template.url || '');
       setDirectory(template.directory || '');
       setFileName(template.fileName || '');
+      setDescription(template.description || '');
       setEncryption(template.encryption);
     }
   };
@@ -111,18 +125,26 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, 
     setUrl(pattern);
   }
 
-  const openParamTester = (isDirMode: boolean) => {
-    setParamTesterDirMode(isDirMode);
-    setParamTesterPattern(isDirMode ? directory : fileName);
+  const openParamTester = (field: WICTemplateField) => {
+    setParamTesterField(field);
+    if (WICTemplateField.Directory === field) {
+      setParamTesterPattern(directory);
+    } else if (WICTemplateField.FileName === field) {
+      setParamTesterPattern(fileName);
+    } else if (WICTemplateField.Description === field) {
+      setParamTesterPattern(description);
+    }
     setShowParamTester(true);
   };
 
-  const onApplyParamPattern = (pattern: string, isDirMode: boolean) => {
+  const onApplyParamPattern = (pattern: string, field: WICTemplateField) => {
     setShowParamTester(false);
-    if (isDirMode) {
+    if (WICTemplateField.Directory === field) {
       setDirectory(pattern);
-    } else {
+    } else if (WICTemplateField.FileName === field) {
       setFileName(pattern);
+    } else if (WICTemplateField.Description === field) {
+      setDescription(pattern)
     }
   };
 
@@ -133,10 +155,10 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, 
       </Modal.Header>
       <Modal.Body>
         <Form id="url-template-form" autoComplete="off" noValidate onSubmit={onFormSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Label htmlFor="template-url-pattern">URL Pattern</Form.Label>
+          <Form.Group className="mb-3" controlId="template-url-pattern">
+            <Form.Label >URL Pattern</Form.Label>
             <InputGroup>
-              <Form.Control id="template-url-pattern" type="text" maxLength={500}
+              <Form.Control type="text" maxLength={500}
                 className={urlError ? 'is-invalid' : ''} isInvalid={!!urlError}
                 value={url} onInput={e => setUrl(e.currentTarget.value)}
               />
@@ -156,14 +178,14 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, 
               </ul>
             </Form.Text>
           </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label htmlFor="template-directory">Destination Directory Path</Form.Label>
+          <Form.Group className="mb-3" controlId="template-directory">
+            <Form.Label>Destination Directory Path</Form.Label>
             <InputGroup>
-              <Form.Control id="template-directory" type="text" maxLength={500}
+              <Form.Control type="text" maxLength={500}
                 className={directoryError ? 'is-invalid' : ''} isInvalid={!!directoryError}
                 value={directory} onInput={e => setDirectory(e.currentTarget.value)}
               />
-              <Button className="rounded-end no-text" variant="outline-secondary" onClick={() => openParamTester(true)}>
+              <Button className="rounded-end no-text" variant="outline-secondary" onClick={() => openParamTester(WICTemplateField.Directory)}>
                 <ClipboardPulse />
               </Button>
               <Form.Control.Feedback type="invalid">
@@ -185,14 +207,14 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, 
                 target="_blank">fallback directory</a>.
             </Form.Text>
           </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label htmlFor="template-file-name">File Name</Form.Label>
+          <Form.Group className="mb-3" controlId="template-file-name">
+            <Form.Label>{t("fileName")}</Form.Label>
             <InputGroup>
-              <Form.Control type="text" id="template-file-name" maxLength={200}
+              <Form.Control type="text" maxLength={200}
                 className={fileNameError ? 'is-invalid' : ''} isInvalid={!!fileNameError}
                 value={fileName} onInput={e => setFileName(e.currentTarget.value)}
               />
-              <Button className="rounded-end no-text" variant="outline-secondary" onClick={() => openParamTester(false)}>
+              <Button className="rounded-end no-text" variant="outline-secondary" onClick={() => openParamTester(WICTemplateField.FileName)}>
                 <ClipboardPulse />
               </Button>
               <Form.Control.Feedback type="invalid">
@@ -214,6 +236,32 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, 
                 target="_blank">fallback file name</a>.
             </Form.Text>
           </Form.Group>
+          {('FileLuS5' === providerType || 'AwsS3' === providerType) &&
+            <FormGroup className="mb-3" controlId="template-description">
+              <Form.Label>{t("fileDescription")}</Form.Label>
+              <InputGroup>
+                <Form.Control type="text" maxLength={1000}
+                  className={descriptionError ? 'is-invalid' : ''} isInvalid={!!descriptionError}
+                  value={description} onInput={e => setDescription(e.currentTarget.value)}
+                />
+                <Button className="rounded-end no-text" variant="outline-secondary" onClick={() => openParamTester(WICTemplateField.Description)}>
+                  <ClipboardPulse />
+                </Button>
+                <Form.Control.Feedback type="invalid">
+                  {descriptionError}
+                </Form.Control.Feedback>
+              </InputGroup>
+              <Form.Text>
+                The optional file description. <a
+                  href="https://github.com/hkalbertl/web-image-categorizer/wiki/Documentation#wic-parameters"
+                  target="_blank">WIC parameters</a> are supported.
+                For example:
+                <ul className="mb-0">
+                  <li>Source URL: &#123;url&#125;</li>
+                </ul>
+              </Form.Text>
+            </FormGroup>
+          }
           <Form.Check
             type="switch" id="template-use-encryption" label="Use client-side encryption when available"
             className="mb-3" checked={encryption} onChange={e => setEncryption(e.target.checked)}
@@ -240,7 +288,7 @@ const EditTemplateModal: React.FC<EditTemplateModalProps> = ({ show, isEditing, 
     <ParamTesterModal
       show={showParamTester}
       pattern={paramTesterPattern}
-      isDirMode={paramTesterDirMode}
+      field={paramTesterField}
       onUse={onApplyParamPattern}
       onClose={() => setShowParamTester(false)}
     />

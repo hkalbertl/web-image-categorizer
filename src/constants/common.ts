@@ -20,8 +20,8 @@ export const SUPPORT_IMAGE_TYPES = [
 ];
 
 export const SUPPORT_PROVIDER_TYPES = [
-  { type: 'FileLu' as WICProviderType, display: i18n.t("providerTypeFileLu") },
   { type: 'FileLuS5' as WICProviderType, display: i18n.t("providerTypeFileLuS5") },
+  { type: 'FileLu' as WICProviderType, display: i18n.t("providerTypeFileLu") },
   { type: 'AwsS3' as WICProviderType, display: i18n.t("providerTypeAwsS3") },
 ];
 

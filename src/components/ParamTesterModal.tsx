@@ -1,24 +1,25 @@
 import { Alert, Button, Form, Modal } from "react-bootstrap";
 import { CheckLg, ExclamationTriangle, ClipboardPulse, Send, XLg } from "react-bootstrap-icons";
 import { useTranslation } from "react-i18next";
-import { WICTemplate } from "@/types/common";
+import { WICTemplate, WICTemplateField } from "@/types/common";
 import { validateTemplateInput, matchTemplate, getErrorMessage } from "@/utils/common";
 
 interface ParamTesterModalProps {
   show: boolean;
   pattern?: string;
-  isDirMode: boolean;
+  field: WICTemplateField;
   onClose: () => void;
-  onUse: (pattern: string, isDirMode: boolean) => void;
+  onUse: (pattern: string, field: WICTemplateField) => void;
 }
 
 /**
  * The modal used for testing WIC parameter pattern.
  */
-const ParamTesterModal: React.FC<ParamTesterModalProps> = ({ show, pattern, isDirMode, onClose, onUse }) => {
+const ParamTesterModal: React.FC<ParamTesterModalProps> = ({ show, pattern, field, onClose, onUse }) => {
 
   const { t } = useTranslation();
 
+  const [testParamLabel, setTestParamLabel] = useState('');
   const [testPattern, setTestPattern] = useState('');
   const [testUrl, setTestUrl] = useState('');
 
@@ -42,7 +43,7 @@ const ParamTesterModal: React.FC<ParamTesterModalProps> = ({ show, pattern, isDi
       setTestPatternError(t("fieldRequired"));
       isValid = false;
     } else {
-      const patternError = validateTemplateInput(testPattern, isDirMode);
+      const patternError = validateTemplateInput(testPattern, field);
       if (patternError) {
         setTestPatternError(patternError);
         isValid = false;
@@ -61,15 +62,24 @@ const ParamTesterModal: React.FC<ParamTesterModalProps> = ({ show, pattern, isDi
       let itemError: string | undefined;
       try {
         const queryPattern: WICTemplate = { url: '*', encryption: false };
-        if (isDirMode) {
+        if (WICTemplateField.Directory === field) {
           queryPattern.directory = testPattern;
-        } else {
+        } else if (WICTemplateField.FileName === field) {
           queryPattern.fileName = testPattern;
+        } else if (WICTemplateField.Description === field) {
+          queryPattern.description = testPattern;
         }
         const matching = matchTemplate([queryPattern], testUrl, 'Sample-Page-Title', 'image/jpeg');
         if (matching && matching.isMatched) {
           // Data matched
-          const msg = isDirMode ? matching.directory : matching.fileName;
+          let msg: string | undefined = undefined;
+          if (WICTemplateField.Directory === field) {
+            msg = matching.directory;
+          } else if (WICTemplateField.FileName === field) {
+            msg = matching.fileName;
+          } else if (WICTemplateField.Description === field) {
+            msg = matching.description;
+          }
           if (msg) setSuccessMessage(msg);
         } else {
           // Failed to match or required parameter does not exist
@@ -106,6 +116,13 @@ const ParamTesterModal: React.FC<ParamTesterModalProps> = ({ show, pattern, isDi
    */
   const onModalOpen = () => {
     resetForm();
+    if (WICTemplateField.Directory === field) {
+      setTestParamLabel(t("directoryPattern"));
+    } else if (WICTemplateField.FileName === field) {
+      setTestParamLabel(t("fileNamePattern"));
+    } else if (WICTemplateField.Description === field) {
+      setTestParamLabel(t("descriptionPattern"));
+    }
     if (pattern) {
       setTestPattern(pattern);
     }
@@ -119,7 +136,7 @@ const ParamTesterModal: React.FC<ParamTesterModalProps> = ({ show, pattern, isDi
       <Modal.Body>
         <Form id="param-test-form" autoComplete="off" noValidate onSubmit={onFormSubmit}>
           <Form.Group className="mb-3">
-            <Form.Label htmlFor="param-test-pattern">{t(isDirMode ? "directoryPattern" : "fileNamePattern")}</Form.Label>
+            <Form.Label htmlFor="param-test-pattern">{testParamLabel}</Form.Label>
             <Form.Control id="param-test-pattern" type="text" isInvalid={!!testPatternError}
               className={`rounded-end ${testPatternError ? 'is-invalid' : ''}`}
               value={testPattern} onInput={e => setTestPattern(e.currentTarget.value)}
@@ -157,7 +174,7 @@ const ParamTesterModal: React.FC<ParamTesterModalProps> = ({ show, pattern, isDi
           <ClipboardPulse />
           {t("test")}
         </Button>
-        <Button type="button" variant="outline-primary" onClick={() => onUse(testPattern, isDirMode)}>
+        <Button type="button" variant="outline-primary" onClick={() => onUse(testPattern, field)}>
           <Send />
           {t("use")}
         </Button>

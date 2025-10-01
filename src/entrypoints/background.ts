@@ -179,7 +179,6 @@ export default defineBackground(() => {
         // Send data to sidebar
         browser.runtime.sendMessage({
           action: 'fill-image',
-          referrer: tabUrl,
           imageData: msgImageData,
           imageType: imageData.blobType,
           dimension: imageData.dimension,
@@ -188,6 +187,7 @@ export default defineBackground(() => {
           directory: nameData.directory,
           fileName: nameData.fileName,
           extension: nameData.extension,
+          description: nameData.description,
           useEncryption: nameData.encryption,
         });
       } else {
@@ -197,6 +197,12 @@ export default defineBackground(() => {
         if (!api) {
           // Unknown provider
           throw new Error(i18n.t("invalidProviderOptions") + providerName);
+        }
+
+        // Prepare file description
+        let description: string | undefined = undefined;
+        if ('FileLuS5' === appConfig.provider.type || 'AwsS3' === appConfig.provider.type) {
+          description = nameData.description;
         }
 
         // Encrypt file, if required
@@ -212,7 +218,7 @@ export default defineBackground(() => {
         }
 
         // Upload file
-        await api.uploadFile(nameData.directory!, fileName, uploadBlob);
+        await api.uploadFile(nameData.directory!, fileName, description, uploadBlob);
 
         // Update notification
         let notifyMessage: string | null = null, msgLevel = 3;

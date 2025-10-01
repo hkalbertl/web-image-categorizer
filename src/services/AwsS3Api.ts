@@ -30,7 +30,7 @@ export default class AwsS3Api implements StorageProvider {
     return false;
   }
 
-  async uploadFile(directory: string, fileName: string, data: Blob): Promise<string> {
+  async uploadFile(directory: string, fileName: string, description: string | undefined, data: Blob): Promise<string> {
     // Build the path, removing the tail slashes
     // For AWS S3, the immedicate directory at root directory is the bucket name
     let path: string = directory.replace(/[\/]+$/g, '');
@@ -40,6 +40,14 @@ export default class AwsS3Api implements StorageProvider {
     path = path.replace(/^[\/]+/g, '');
     // The final path should be something like: bucket-name/path/to/directory/filename.jpg
 
+    // Add description to header, if defined
+    let headers = undefined;
+    if (description) {
+      headers = {
+        "x-amz-meta-description": description.replace(/\r?\n/g, " ")
+      };
+    }
+
     // Create signature and sign the request
     const signer = this.createSignature();
     const bodyData = await data.arrayBuffer();
@@ -47,6 +55,7 @@ export default class AwsS3Api implements StorageProvider {
       protocol: AwsS3Api.S3_PROTOCOL,
       hostname: this.hostName,
       method: 'PUT',
+      headers,
       path,
       body: bodyData,
     });

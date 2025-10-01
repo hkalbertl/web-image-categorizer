@@ -26,8 +26,10 @@ function App() {
 
   // Edit form relate
   const [showEditForm, setShowEditForm] = useState(false);
+  const [hasDescription, setHasDescription] = useState(false);
   const [imageDirectory, setImageDirectory] = useState('');
   const [imageFileName, setImageFileName] = useState('');
+  const [imageDescription, setImageDescription] = useState('');
   const [imageDimension, setImageDimension] = useState('');
   const [imageFileSize, setImageFileSize] = useState('');
   const [useEncryption, setUseEncryption] = useState(false);
@@ -76,7 +78,10 @@ function App() {
         const targetProviderType = config.provider.type,
           targetProviderEntry = SUPPORT_PROVIDER_TYPES.find(p => p.type === targetProviderType);
         if (targetProviderEntry) {
+          // Provider found, show the display name on navbar
           setNavbarProvider(targetProviderEntry.display);
+          // Enable description for S3 related
+          setHasDescription('FileLuS5' === targetProviderEntry.type || 'AwsS3' === targetProviderEntry.type);
           // Show the usage tips
           setShowUsageTips(true);
         } else {
@@ -98,6 +103,7 @@ function App() {
    * @param targetDirectory
    * @param targetFileName
    * @param targetExtension
+   * @param targetDescription
    * @param useEncryption
    */
   const fillImageData = async (
@@ -108,6 +114,7 @@ function App() {
     targetDirectory: string,
     targetFileName: string,
     targetExtension: string,
+    targetDescription: string,
     useEncryption: boolean
   ) => {
     // Reset layout
@@ -150,7 +157,9 @@ function App() {
 
       setDisplayFileExt(targetExtension);
       setOriginalFileExt(targetExtension);
-      // activeFileExt = targetExtension;
+
+      // Set description to tab URL
+      setImageDescription(targetDescription || '');
 
       // Add file dimension and size
       setImageDimension(dimension || '');
@@ -269,7 +278,7 @@ function App() {
       }
 
       // Upload file
-      const fileRef = await api.uploadFile(trimmedDirectory, fileName, uploadBlob);
+      const fileRef = await api.uploadFile(trimmedDirectory, fileName, imageDescription.trim(), uploadBlob);
       console.debug(`File uploaded: ${fileRef}`);
 
       // Set success message and hide edit form
@@ -323,7 +332,7 @@ function App() {
         }
         // Image sent from background / content
         await fillImageData(blobArray, message.imageType, message.dimension, message.displaySize,
-          message.directory, message.fileName, message.extension, message.useEncryption);
+          message.directory, message.fileName, message.extension, message.description, message.useEncryption);
       } else if ('show-error' === message.action) {
         // Problem occurred in background script, hide elements
         resetLayout();
@@ -418,6 +427,14 @@ function App() {
                   <Form.Control.Feedback type="invalid">{imageFileNameError}</Form.Control.Feedback>
                 </InputGroup>
               </Form.Group>
+              {hasDescription &&
+                <Form.Group controlId="cloud-file-description">
+                  <Form.Label>{t("fileDescription")}</Form.Label>
+                  <Form.Control maxLength={1000}
+                    value={imageDescription} onInput={e => setImageDescription(e.currentTarget.value)}
+                  />
+                </Form.Group>
+              }
               <Form.Group controlId="cloud-file-info">
                 <Form.Label>
                   {t("fileInfo")}

@@ -25,6 +25,7 @@ export interface WICProvider {
 export interface BaseEntry {
   directory?: string;
   fileName?: string;
+  description?: string;
   encryption: boolean;
 }
 
@@ -46,6 +47,12 @@ export interface WICImageData {
 }
 
 export type WICProviderType = 'FileLu' | 'FileLuS5' | 'AwsS3';
+
+export enum WICTemplateField {
+  Directory,
+  FileName,
+  Description
+}
 
 export type WICImageFormat = 'image/jpeg' | 'image/png' | 'image/webp';
 

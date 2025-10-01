@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import mime from 'mime';
 import { isMatch } from 'matcher';
-import { WICConfig, WICTemplate, WICMatchResult, WICProvider, WICImageData } from '../types/common'
+import { WICConfig, WICTemplate, WICMatchResult, WICProvider, WICImageData, WICTemplateField } from '../types/common'
 import { DEFAULT_CONFIG, SUPPORT_IMAGE_TYPES, SUPPORT_PROVIDER_TYPES } from '@/constants/common';
 import i18n from '@/i18n';
 import StorageProvider from '@/services/StorageProvider';
@@ -118,24 +118,27 @@ export const getNowString = () => {
 /**
  * Match referrer with templates and generate destination directory and file name.
  * @param templates WIC naming templates.
- * @param referrer The URL contain target image.
+ * @param pageUrl The URL contain target image.
  * @param pageTitle The title of the source webpage.
  * @param imageFormat The content type of image, such as `image/jpeg`.
  * @returns The generated directory and file name.
  */
-export const matchTemplate = (templates: WICTemplate[] | null, referrer: string, pageTitle: string, imageFormat?: string) => {
+export const matchTemplate = (templates: WICTemplate[] | null, pageUrl: string, pageTitle: string, imageFormat?: string) => {
   // Define parameter values
   const now = dayjs(),
-    refUrl = new URL(referrer),
+    refUrl = new URL(pageUrl),
     extName = getExtName(imageFormat);
 
   // Define the replace function
-  const replaceFunc = (input: string) => {
+  const replaceFunc = (input: string, field: WICTemplateField) => {
     let edited = input;
     const patterns = extractCurlyBracePatterns(input);
     if (patterns) {
       patterns.forEach(token => {
-        if ('{host}' === token) {
+        if ('{url}' === token && WICTemplateField.Description === field) {
+          // Substitute with URL, used by description field only
+          edited = edited.replace(token, pageUrl);
+        } else if ('{host}' === token) {
           // Substitute with URL host, such as `www.example.com`
           edited = edited.replace(token, refUrl.host);
         } else if ('{title}' === token) {
@@ -206,13 +209,16 @@ export const matchTemplate = (templates: WICTemplate[] | null, referrer: string,
   };
   if (templates && Array.isArray(templates)) {
     for (const template of templates) {
-      if (isUrlMatch(referrer, template.url)) {
+      if (isUrlMatch(pageUrl, template.url)) {
         console.debug('URL matched: ' + template.url);
         if (template.directory) {
-          result.directory = replaceFunc(template.directory);
+          result.directory = replaceFunc(template.directory, WICTemplateField.Directory);
         }
         if (template.fileName) {
-          result.fileName = replaceFunc(template.fileName);
+          result.fileName = replaceFunc(template.fileName, WICTemplateField.FileName);
+        }
+        if (template.description) {
+          result.description = replaceFunc(template.description, WICTemplateField.Description);
         }
         result.extension = `.${extName}`;
         result.encryption = template.encryption;
@@ -265,13 +271,19 @@ export const hasMatchedCurlyBraces = (input: string): boolean => {
 /**
  * Check if the specified input text is a valid WIC parameter. Such as {host} and {now-YYYY}.
  * @param {string} input Input text to be checked.
+ * @param {WICTemplateField} field The field type of input text.
  * @returns {boolean} Return true if the text is valid.
  */
-export const isValidWicParams = (input: string): boolean => {
+export const isValidWicParams = (input: string, field: WICTemplateField): boolean => {
   // Extract the content within braces
   const content = input.substring(1, input.length - 1);
   // Check input with exact matched
   if (['now', 'today', 'host', 'title'].some(item => content === item)) {
+    return true;
+  }
+  // Check URL param
+  if ('url' === content && WICTemplateField.Description === field) {
+    // URL only available for description
     return true;
   }
   // Check input with prefixes
@@ -307,13 +319,13 @@ export const isValidForFileName = (input: string): boolean => {
 /**
  * Validate the input of directory / file name WIC parameter.
  * @param input Input value.
- * @param isDirectory The input value is used for directory or not.
+ * @param field The input field type.
  * @returns Return null when the input value is valid. Otherwise, error message will be returned.
  */
-export const validateTemplateInput = (input: string, isDirectory: boolean): string | null => {
+export const validateTemplateInput = (input: string, field: WICTemplateField): string | null => {
   let itemError: string | null = null;
   // Check for directory path start character
-  if (isDirectory && '/' !== input.charAt(0)) {
+  if (WICTemplateField.Directory === field && '/' !== input.charAt(0)) {
     itemError = i18n.t("directoryStartWithSlash");
   }
   if (!itemError) {
@@ -325,7 +337,7 @@ export const validateTemplateInput = (input: string, isDirectory: boolean): stri
     } else {
       // Make sure each parameter is valid
       for (const item of params) {
-        if (!isValidWicParams(item)) {
+        if (!isValidWicParams(item, field)) {
           itemError = i18n.t("unsupportedParameter") + item;
           break;
         } else if (!isValidForFileName(item)) {
@@ -337,7 +349,7 @@ export const validateTemplateInput = (input: string, isDirectory: boolean): stri
   }
   // Final check on restricted charachers
   if (!itemError) {
-    if (isDirectory && 1 < input.length) {
+    if (WICTemplateField.Directory === field && 1 < input.length) {
       // Check for invaid character(s)
       const segments = input.substring(1).split('/');
       if (segments && segments.length) {
@@ -348,11 +360,13 @@ export const validateTemplateInput = (input: string, isDirectory: boolean): stri
           }
         }
       }
-    } else if (!isDirectory) {
+    } else if (WICTemplateField.FileName === field) {
       // Check for invaid character(s)
       if (!isValidForFileName(input)) {
         itemError = i18n.t("invalidCharacters");
       }
+    } else if (WICTemplateField.Description === field) {
+      // No validation required for description
     }
   }
   return itemError;
@@ -541,6 +555,9 @@ export const validateImportConfig = (rawJson: any): WICConfig => {
         if (item.fileName && 'string' !== typeof item.fileName) {
           throw new Error('Unknown template file name.');
         }
+        if (item.description && 'string' !== typeof item.description) {
+          throw new Error('Unknown template description.');
+        }
         if ('boolean' !== typeof item.encryption) {
           throw new Error('Unknown template encryption.');
         }
@@ -548,6 +565,7 @@ export const validateImportConfig = (rawJson: any): WICConfig => {
           url: item.url,
           directory: item.directory || undefined,
           fileName: item.fileName || undefined,
+          description: item.description || undefined,
           encryption: item.encryption || false,
         } as WICTemplate);
       }
