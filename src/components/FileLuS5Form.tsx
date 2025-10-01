@@ -54,7 +54,7 @@ export const FileLuS5Form = forwardRef<FileLuS5FormRef>((props, ref) => {
 
   return (<>
     <Form.Group as={Row} controlId="filelu-s5-access-id">
-      <Form.Label column sm={3}>{t("accessId")}</Form.Label>
+      <Form.Label column sm={3}>{t("s5AccessId")}</Form.Label>
       <Col sm={9}>
         <Form.Control type="text" maxLength={50} isInvalid={!!accessIdError}
           value={accessId} onInput={e => setAccessId(e.currentTarget.value)}
@@ -65,7 +65,7 @@ export const FileLuS5Form = forwardRef<FileLuS5FormRef>((props, ref) => {
       </Col>
     </Form.Group>
     <Form.Group as={Row} controlId="filelu-s5-secret-key">
-      <Form.Label column sm={3}>{t("secretKey")}</Form.Label>
+      <Form.Label column sm={3}>{t("s5SecretKey")}</Form.Label>
       <Col sm={9}>
         <PasswordField password={secretKey} onInput={setSecretKey} invalidMsg={secretKeyError} />
         <Form.Text>
