@@ -27,8 +27,8 @@ You can define naming templates to preset default save directories and file name
 ## Demo 1 - Without Sidebar
 https://github.com/user-attachments/assets/af1ace5e-f84a-4d86-ac43-5cf2ec43c768
 
-## Demo 2 - With Sidebar, changing file name before uploading
-https://github.com/user-attachments/assets/b9458cd6-6b89-4e6b-8066-f231591dc3b3
+## Demo 2 - With Sidebar, changing file name / description before uploading
+https://github.com/user-attachments/assets/f10217fa-ba72-428b-866d-5bf422b798b6
 
 ## Demo 3 - With Sidebar, changing image format and encrypt image before uploading
 https://github.com/user-attachments/assets/11c35704-aa86-4764-b4c4-0fcc0ed16971
