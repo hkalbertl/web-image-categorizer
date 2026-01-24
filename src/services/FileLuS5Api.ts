@@ -1,6 +1,6 @@
-import AwsS3Api from "./AwsS3Api";
+import AwsS3SmithyApi from "./AwsS3SmithyApi";
 
-export default class FileLuS5Api extends AwsS3Api {
+export default class FileLuS5Api extends AwsS3SmithyApi {
 
   private static readonly S5_HOSTNAME = "s5lu.com";
   private static readonly S5_REGION = "global";

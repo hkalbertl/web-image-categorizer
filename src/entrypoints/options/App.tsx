@@ -60,7 +60,9 @@ function App() {
           config.provider.hostName || '',
           config.provider.region || '',
           config.provider.accessId || '',
-          config.provider.secretKey || '');
+          config.provider.secretKey || '',
+          config.provider.bucketName || '',
+          config.provider.usePathStyle || false);
       }
     }
     if (Array.isArray(config.templates)) {

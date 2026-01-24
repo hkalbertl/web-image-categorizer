@@ -5,7 +5,7 @@ import { XMLParser } from "fast-xml-parser";
 import { getErrorMessage } from "@/utils/common";
 import StorageProvider from "./StorageProvider";
 
-export default class AwsS3Api implements StorageProvider {
+export default class AwsS3SmithyApi implements StorageProvider {
 
   private static readonly S3_PROTOCOL = "https";
 
@@ -52,7 +52,7 @@ export default class AwsS3Api implements StorageProvider {
     const signer = this.createSignature();
     const bodyData = await data.arrayBuffer();
     const request = new HttpRequest({
-      protocol: AwsS3Api.S3_PROTOCOL,
+      protocol: AwsS3SmithyApi.S3_PROTOCOL,
       hostname: this.hostName,
       method: 'PUT',
       headers,
@@ -101,7 +101,7 @@ export default class AwsS3Api implements StorageProvider {
     // Create signature and sign the request
     const signer = this.createSignature();
     const request = new HttpRequest({
-      protocol: AwsS3Api.S3_PROTOCOL,
+      protocol: AwsS3SmithyApi.S3_PROTOCOL,
       hostname: this.hostName,
       method,
       path,

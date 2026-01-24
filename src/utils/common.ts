@@ -6,8 +6,8 @@ import { DEFAULT_CONFIG, SUPPORT_IMAGE_TYPES, SUPPORT_PROVIDER_TYPES } from '@/c
 import i18n from '@/i18n';
 import StorageProvider from '@/services/StorageProvider';
 import FileLuApi from '@/services/FileLuApi';
-import AwsS3Api from '@/services/AwsS3Api';
 import FileLuS5Api from '@/services/FileLuS5Api';
+import AwsS3NativeApi from '@/services/AwsS3NativeApi';
 
 /**
  * The date/time format for `now`.
@@ -51,7 +51,8 @@ export const initApiClient = (provider?: WICProvider): StorageProvider | undefin
     } else if ('FileLuS5' === provider.type && provider.accessId && provider.secretKey) {
       return new FileLuS5Api(provider.accessId, provider.secretKey);
     } else if ('AwsS3' === provider.type && provider.accessId && provider.secretKey && provider.hostName) {
-      return new AwsS3Api(provider.accessId, provider.secretKey, provider.hostName, provider.region);
+      return new AwsS3NativeApi(provider.accessId, provider.secretKey, provider.hostName,
+        provider.bucketName, provider.region, provider.usePathStyle);
     }
   }
   return undefined;

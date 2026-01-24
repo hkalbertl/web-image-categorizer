@@ -92,5 +92,7 @@
   "size": "Size",
   "dimensionShort": "Dim.",
   "unknownDownloadError": "Unknown download error.",
-  "fileDescription": "Description"
+  "fileDescription": "Description",
+  "bucketName": "Bucket Name",
+  "usePathStyle": "Use path style"
 }
