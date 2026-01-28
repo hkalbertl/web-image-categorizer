@@ -537,6 +537,8 @@ export const validateImportConfig = (rawJson: any): WICConfig => {
     type: rawJson.provider.type,
     hostName: rawJson.provider.hostName,
     region: rawJson.provider.region,
+    bucketName: rawJson.provider.bucketName,
+    usePathStyle: rawJson.provider.usePathStyle,
   };
 
   // Validate templates

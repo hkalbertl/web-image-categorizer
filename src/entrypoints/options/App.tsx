@@ -189,6 +189,8 @@ function App() {
           type: config.provider.type,
           hostName: config.provider.hostName,
           region: config.provider.region,
+          bucketName: config.provider.bucketName,
+          usePathStyle: config.provider.usePathStyle,
         };
       }
       // Remove password
