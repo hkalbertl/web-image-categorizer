@@ -7,7 +7,7 @@ import i18n from '@/i18n';
 import StorageProvider from '@/services/StorageProvider';
 import FileLuApi from '@/services/FileLuApi';
 import FileLuS5Api from '@/services/FileLuS5Api';
-import AwsS3NativeApi from '@/services/AwsS3NativeApi';
+import AwsS3Api from '@/services/AwsS3Api';
 
 /**
  * The date/time format for `now`.
@@ -48,10 +48,10 @@ export const initApiClient = (provider?: WICProvider): StorageProvider | undefin
   if (provider && provider.type) {
     if ('FileLu' === provider.type && provider.apiKey) {
       return new FileLuApi(provider.apiKey);
-    } else if ('FileLuS5' === provider.type && provider.accessId && provider.secretKey) {
-      return new FileLuS5Api(provider.accessId, provider.secretKey);
+    } else if ('FileLuS5' === provider.type && provider.accessId && provider.secretKey && provider.bucketName) {
+      return new FileLuS5Api(provider.accessId, provider.secretKey, provider.bucketName);
     } else if ('AwsS3' === provider.type && provider.accessId && provider.secretKey && provider.hostName) {
-      return new AwsS3NativeApi(provider.accessId, provider.secretKey, provider.hostName,
+      return new AwsS3Api(provider.accessId, provider.secretKey, provider.hostName,
         provider.bucketName, provider.region, provider.usePathStyle);
     }
   }

@@ -1,7 +1,7 @@
 import { S3Client, HeadBucketCommand, ListBucketsCommand, PutObjectCommand, PutObjectCommandInput } from '@aws-sdk/client-s3';
 import StorageProvider from './StorageProvider';
 
-export default class AwsS3NativeApi implements StorageProvider {
+export default class AwsS3Api implements StorageProvider {
 
   /**
    * Create new AWS S3 API client.
@@ -75,7 +75,7 @@ export default class AwsS3NativeApi implements StorageProvider {
 
   private createS3Client() {
     return new S3Client({
-      region: this.region || undefined,
+      region: this.region || 'auto',
       endpoint: `https://${this.hostName}`,
       credentials: {
         accessKeyId: this.accessId,
