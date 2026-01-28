@@ -2,7 +2,7 @@
 
 Web Image Categorizer (WIC) is a browser extension that lets you save images from webpages directly to [FileLu](https://filelu.com/), a secure, privacy-focused cloud storage provider.
 
-WIC now supports FileLu's [S5 Object Storage API](https://filelu.com/pages/s5-object-storage/), providing an alternative upload method. Since S5 is AWS S3–compatible, WIC can also connect to other S3 storage providers.
+WIC now supports FileLu's [S5 Object Storage API](https://filelu.com/pages/s5-object-storage/), providing an alternative upload method. Since S5 is AWS S3–compatible, WIC can also connect to other [S3 storage providers](https://github.com/hkalbertl/web-image-categorizer/wiki/Connection-Methods#tested-aws-s3-compatible-providers).
 
 You can define naming templates to preset default save directories and file names to match your preferences.
 
@@ -42,44 +42,6 @@ https://github.com/user-attachments/assets/11c35704-aa86-4764-b4c4-0fcc0ed16971
 
 ## Usage / Options
 Please check the [Wiki](https://github.com/hkalbertl/web-image-categorizer/wiki) for more information.
-
-## Tested AWS S3 compatible providers
-<table>
-<thead>
-<tr>
-  <th>Provider</th>
-  <th>S3 Region</th>
-  <th>S3 URL Style</th>
-  <th>Status</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <td><a href="https://www.backblaze.com/cloud-storage" target="_blank">Backblaze B2</a></td>
-  <td>(Optional)</td>
-  <td>Virtual Host</td>
-  <td>✅ Working</td>
-</tr>
-<tr>
-  <td><a href="https://www.idrive.com/s3-storage-e2/" target="_blank">iDrive e2</a></td>
-  <td>(Optional)</td>
-  <td>Virtual Host</td>
-  <td>✅ Working</td>
-</tr>
-<tr>
-  <td><a href="https://www.cloudflare.com/developer-platform/products/r2/" target="_blank">Cloudflare R2</a></td>
-  <td>auto</td>
-  <td>Virtual Host / Path</td>
-  <td>❌ Not working<br/>Tried both styles, persistent SignatureDoesNotMatch error in browser</td>
-</tr>
-<tr>
-  <td><a href="https://tebi.io" target="_blank">Tebi</a></td>
-  <td>(Optional)</td>
-  <td>Virtual Host</td>
-  <td>✅ Working<br/>Warning: Tebi will be shut down on March 31, 2026</td>
-</tr>
-</tbody>
-</table>
 
 ## Terms of Use
 By using this extension, you agree to the following terms:

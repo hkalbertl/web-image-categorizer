@@ -21,7 +21,10 @@ export default defineConfig({
       browser_specific_settings: isFireFox ? {
         gecko: {
           id: "{8276cdb0-d7d9-4e1b-87a0-1f5f1726d806}",
-          strict_min_version: "127.0"
+          strict_min_version: "142.0",
+          data_collection_permissions: {
+            required: ["none"]
+          }
         }
       } : undefined,
     };
