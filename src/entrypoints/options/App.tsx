@@ -54,13 +54,18 @@ function App() {
       if ('FileLu' === config.provider.type) {
         fileLuFormRef.current?.setValues(config.provider.apiKey || '');
       } else if ('FileLuS5' === config.provider.type) {
-        fileLuS5FormRef.current?.setValues(config.provider.accessId || '', config.provider.secretKey || '');
+        fileLuS5FormRef.current?.setValues(
+          config.provider.accessId || '',
+          config.provider.secretKey || '',
+          config.provider.bucketName || '');
       } else if ('AwsS3' === config.provider.type) {
         awsS3FormRef.current?.setValues(
           config.provider.hostName || '',
           config.provider.region || '',
           config.provider.accessId || '',
-          config.provider.secretKey || '');
+          config.provider.secretKey || '',
+          config.provider.bucketName || '',
+          config.provider.usePathStyle || false);
       }
     }
     if (Array.isArray(config.templates)) {

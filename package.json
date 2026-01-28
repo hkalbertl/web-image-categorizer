@@ -1,6 +1,6 @@
 {
   "name": "web-image-categorizer",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "A browser extension to save webpage images to cloud storage using customizable naming templates.",
   "keywords": [
     "browser-extension",
@@ -32,30 +32,28 @@
   "author": "Albert L <hkalbertl@users.noreply.github.com>",
   "license": "MIT",
   "dependencies": {
-    "@aws-crypto/sha256-js": "^5.2.0",
-    "@smithy/protocol-http": "^5.2.1",
-    "@smithy/signature-v4": "^5.2.1",
+    "@aws-sdk/client-s3": "^3.975.0",
     "@wxt-dev/webextension-polyfill": "^1.0.0",
     "bootstrap": "^5.3.8",
-    "dayjs": "^1.11.18",
-    "fast-xml-parser": "^5.2.5",
-    "i18next": "^25.5.2",
+    "dayjs": "^1.11.19",
+    "i18next": "^25.8.0",
     "matcher": "^6.0.0",
     "mime": "^4.1.0",
-    "react": "^19.1.1",
+    "react": "^19.2.4",
     "react-bootstrap": "^2.10.10",
     "react-bootstrap-icons": "^1.11.6",
-    "react-dom": "^19.1.1",
-    "react-i18next": "^15.7.3",
+    "react-dom": "^19.2.4",
+    "react-i18next": "^16.5.4",
     "wcipher": "^0.0.5",
     "webextension-polyfill": "^0.12.0"
   },
   "devDependencies": {
-    "@types/react": "^19.1.16",
-    "@types/react-dom": "^19.1.9",
-    "@wxt-dev/module-react": "^1.1.3",
-    "sass-embedded": "^1.93.2",
-    "typescript": "^5.9.2",
-    "wxt": "^0.20.11"
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.3",
+    "@wxt-dev/module-react": "^1.1.5",
+    "baseline-browser-mapping": "^2.9.18",
+    "sass-embedded": "^1.97.3",
+    "typescript": "^5.9.3",
+    "wxt": "^0.20.13"
   }
 }

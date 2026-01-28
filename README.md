@@ -27,8 +27,8 @@ You can define naming templates to preset default save directories and file name
 ## Demo 1 - Without Sidebar
 https://github.com/user-attachments/assets/af1ace5e-f84a-4d86-ac43-5cf2ec43c768
 
-## Demo 2 - With Sidebar, changing file name before uploading
-https://github.com/user-attachments/assets/b9458cd6-6b89-4e6b-8066-f231591dc3b3
+## Demo 2 - With Sidebar, changing file name / description before uploading
+https://github.com/user-attachments/assets/f10217fa-ba72-428b-866d-5bf422b798b6
 
 ## Demo 3 - With Sidebar, changing image format and encrypt image before uploading
 https://github.com/user-attachments/assets/11c35704-aa86-4764-b4c4-0fcc0ed16971
@@ -42,6 +42,44 @@ https://github.com/user-attachments/assets/11c35704-aa86-4764-b4c4-0fcc0ed16971
 
 ## Usage / Options
 Please check the [Wiki](https://github.com/hkalbertl/web-image-categorizer/wiki) for more information.
+
+## Tested AWS S3 compatible providers
+<table>
+<thead>
+<tr>
+  <th>Provider</th>
+  <th>S3 Region</th>
+  <th>S3 URL Style</th>
+  <th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><a href="https://www.backblaze.com/cloud-storage" target="_blank">Backblaze B2</a></td>
+  <td>(Optional)</td>
+  <td>Virtual Host</td>
+  <td>✅ Working</td>
+</tr>
+<tr>
+  <td><a href="https://www.idrive.com/s3-storage-e2/" target="_blank">iDrive e2</a></td>
+  <td>(Optional)</td>
+  <td>Virtual Host</td>
+  <td>✅ Working</td>
+</tr>
+<tr>
+  <td><a href="https://www.cloudflare.com/developer-platform/products/r2/" target="_blank">Cloudflare R2</a></td>
+  <td>auto</td>
+  <td>Virtual Host / Path</td>
+  <td>❌ Not working<br/>Tried both styles, persistent SignatureDoesNotMatch error in browser</td>
+</tr>
+<tr>
+  <td><a href="https://tebi.io" target="_blank">Tebi</a></td>
+  <td>(Optional)</td>
+  <td>Virtual Host</td>
+  <td>✅ Working<br/>Warning: Tebi will be shut down on March 31, 2026</td>
+</tr>
+</tbody>
+</table>
 
 ## Terms of Use
 By using this extension, you agree to the following terms:

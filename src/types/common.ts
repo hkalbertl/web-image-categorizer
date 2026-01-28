@@ -20,6 +20,8 @@ export interface WICProvider {
   secretKey?: string;
   hostName?: string;
   region?: string;
+  bucketName?: string;
+  usePathStyle?: boolean;
 }
 
 export interface BaseEntry {

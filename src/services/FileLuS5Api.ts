@@ -8,7 +8,8 @@ export default class FileLuS5Api extends AwsS3Api {
   constructor(
     accessId: string,
     secretKey: string,
+    bucketName: string
   ) {
-    super(accessId, secretKey, FileLuS5Api.S5_HOSTNAME, FileLuS5Api.S5_REGION);
+    super(accessId, secretKey, FileLuS5Api.S5_HOSTNAME, bucketName, FileLuS5Api.S5_REGION, true);
   }
 }
